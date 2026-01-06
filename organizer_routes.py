@@ -34,8 +34,24 @@ def dashboard():
 def halls_list():
     require_organizer(session.get('role'))
 
-    halls = list(mongo.db.halls.find({}))
-    return render_template('organizer/halls.html', halls=halls)
+    # Get selected location from query parameter
+    selected_location = request.args.get('location', 'all')
+
+    # Filter halls by location
+    if selected_location == 'all':
+        halls = list(mongo.db.halls.find({}))
+    else:
+        halls = list(mongo.db.halls.find({'location': selected_location}))
+
+    # Get unique locations for filter
+    all_locations = mongo.db.halls.distinct('location')
+
+    return render_template(
+        'organizer/halls.html',
+        halls=halls,
+        locations=all_locations,
+        selected_location=selected_location
+    )
 
 
 # ---------------- BOOK HALL ----------------
@@ -164,7 +180,49 @@ def bookings():
         halls=halls
     )
 
-@organizer_bp.route('/payment')
-def payment():
-    return render_template('payment.html')
+
+
+
+
+@organizer_bp.route('/payment/<string:booking_id>')
+@login_required
+def payment(booking_id):
+    require_organizer(session.get('role'))
+    
+    # Get hall booking
+    booking = mongo.db.bookings.find_one({'_id': ObjectId(booking_id)})
+    if not booking:
+        flash('Booking not found.', 'danger')
+        return redirect(url_for('organizer.bookings'))
+    
+    # Check if this organizer owns this booking
+    if str(booking['org_id']) != session['user_id']:
+        flash('Unauthorized access.', 'danger')
+        return redirect(url_for('organizer.bookings'))
+    
+    # Get hall details
+    hall = mongo.db.halls.find_one({'_id': booking['hall_id']})
+    
+    # Calculate total (hall + food if linked)
+    total_amount = booking.get('total_price', 0)
+    food_details = None
+    
+    if 'linked_food_booking' in booking and booking['linked_food_booking']:
+        food_booking = mongo.db.food_bookings.find_one({'_id': booking['linked_food_booking']})
+        if food_booking:
+            total_amount += food_booking.get('total_price', 0)
+            food_pkg = mongo.db.food_packages.find_one({'_id': food_booking['package_id']})
+            food_details = {
+                'name': food_pkg['name'] if food_pkg else 'N/A',
+                'plates': food_booking['plates'],
+                'price': food_booking['total_price']
+            }
+    
+    return render_template(
+        'organizer/payment.html',
+        booking=booking,
+        hall=hall,
+        food_details=food_details,
+        total_amount=total_amount
+    )
 

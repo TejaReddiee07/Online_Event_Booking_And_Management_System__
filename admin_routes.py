@@ -64,6 +64,7 @@ def halls():
         capacity = int(request.form['capacity'])
         price_per_hour = float(request.form['price'])
         address = request.form['address']
+        location = request.form['location']
         description = request.form['description']
 
         picture_file = request.files.get('picture')
@@ -84,14 +85,27 @@ def halls():
             "capacity": capacity,
             "price": price_per_hour,
             "address": address,
+            "location": location,
             "description": description,
             "picture": picture_url,
         }
         mongo.db.halls.insert_one(hall_doc)
         flash('Hall added!')
+        return redirect(url_for('admin.halls'))
 
-    halls_list = list(mongo.db.halls.find())
-    return render_template('admin/halls.html', halls=halls_list)
+    # Get location filter
+    selected_location = request.args.get('location', 'all')
+
+    # Filter halls
+    if selected_location == 'all':
+        halls_list = list(mongo.db.halls.find({}))
+    else:
+        halls_list = list(mongo.db.halls.find({'location': selected_location}))
+
+    # Get all unique locations for filter buttons
+    all_locations = mongo.db.halls.distinct('location')
+
+    return render_template('admin/halls.html', halls=halls_list, all_locations=all_locations)
 
 
 @admin_bp.route('/organizers/delete/<organizer_id>', methods=['POST'])
@@ -218,11 +232,13 @@ def approve(booking_id):
             send_booking_confirm_email_with_food(
                 to_email=organizer['email'],
                 hall_name=hall.get('title', 'your hall'),
+                hall_location=hall.get('location', 'Not specified'),  # NEW: Add location
                 from_date=booking.get('from_date', ''),
                 to_date=booking.get('to_date', ''),
                 hall_price=booking.get('total_price', 0),
                 food_details=food_details,
-                total_amount=total_amount
+                total_amount=total_amount,
+                booking_id=str(booking['_id'])
             )
             flash('Booking(s) approved and organizer notified by email!', 'success')
         except Exception as e:
@@ -231,4 +247,5 @@ def approve(booking_id):
         flash('Booking approved!', 'success')
 
     return redirect(url_for('admin.bookings'))
+
 

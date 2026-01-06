@@ -1,46 +1,76 @@
 {% extends "layout_org.html" %}
-{% block title %}Organizer Halls - EventHub{% endblock %}
+{% block title %}Event Halls - EventHub{% endblock %}
 
 {% block org_content %}
 <div class="d-flex justify-content-between align-items-center mb-3">
-    <h5 class="mb-0">Available Event Halls</h5>
+  <h5 class="mb-0">Browse Event Halls</h5>
 </div>
 
-<div class="row">
-    {% for hall in halls %}
-    <div class="col-md-4 mb-4">
-        <div class="card hall-card h-100">
-
-            {# IMAGE: use Mongo 'picture' field #}
-            {% if hall.picture %}
-                <img src="{{ hall.picture }}"
-                     class="card-img-top"
-                     alt="{{ hall.title }}"
-                     style="height: 180px; object-fit: cover;">
-            {% endif %}
-
-            <div class="card-body">
-                <h5 class="card-title">{{ hall.title }}</h5>
-                <p class="card-text mb-1">
-                    {{ hall.capacity }} people | ₹{{ hall.price_per_hour }}/hr
-                </p>
-                <p class="card-text text-muted mb-3">
-                    {{ hall.address }}
-                </p>
-
-                <a href="{{ url_for('organizer.book_hall', hall_id=hall._id) }}"
-                   class="btn btn-primary btn-sm w-100">
-                    Book Now
-                </a>
-            </div>
-        </div>
-    </div>
-    {% else %}
-    <div class="col-12">
-        <div class="alert alert-info text-center">
-            No halls added yet.
-        </div>
-    </div>
+<!-- Location Filter Buttons -->
+<div class="mb-4">
+  <h6 class="mb-3">Filter by Location:</h6>
+  <div class="btn-group" role="group">
+    <a href="{{ url_for('organizer.halls_list', location='all') }}"
+       class="btn btn-sm {{ 'btn-primary' if selected_location == 'all' else 'btn-outline-primary' }}">
+      All Cities
+    </a>
+    {% for loc in locations %}
+    <a href="{{ url_for('organizer.halls_list', location=loc) }}"
+       class="btn btn-sm {{ 'btn-primary' if selected_location == loc else 'btn-outline-primary' }}">
+      {{ loc }}
+    </a>
     {% endfor %}
+  </div>
+</div>
+
+<!-- Display Halls -->
+<h5 class="mb-3">
+  {% if selected_location and selected_location != 'all' %}
+    Halls in {{ selected_location }}
+  {% else %}
+    All Halls
+  {% endif %}
+</h5>
+
+<div class="row">
+  {% for hall in halls %}
+  <div class="col-md-4 mb-4">
+    <div class="card hall-card h-100">
+      {% if hall.picture %}
+      <img src="{{ hall.picture }}" class="card-img-top" alt="{{ hall.title }}">
+      {% endif %}
+      <div class="card-body d-flex flex-column">
+        <h5 class="card-title">{{ hall.title }}</h5>
+        <p class="card-text mb-1">
+          <strong>📍 {{ hall.location }}</strong>
+        </p>
+        <p class="card-text mb-1">
+          <strong>Capacity:</strong> {{ hall.capacity }}
+        </p>
+        <p class="card-text mb-3">
+          <strong>Price:</strong> ₹{{ hall.price }}/hour
+        </p>
+        <p class="card-text text-muted small mb-3">
+          {{ hall.address }}
+        </p>
+        <div class="mt-auto">
+          <a href="{{ url_for('organizer.book_hall', hall_id=hall._id) }}"
+             class="btn btn-primary btn-sm btn-block">
+            Book Hall
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% else %}
+  <div class="col-12">
+    <div class="alert alert-info text-center">
+      No halls found
+      {% if selected_location and selected_location != 'all' %}
+        in {{ selected_location }}
+      {% endif %}.
+    </div>
+  </div>
+  {% endfor %}
 </div>
 {% endblock %}
