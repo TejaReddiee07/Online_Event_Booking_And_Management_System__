@@ -1,0 +1,41 @@
+{% extends "layout_org.html" %}
+{% block org_title %}Available Halls{% endblock %}
+{% block org_content %}
+<div class="row g-4">
+    {% for hall in halls %}
+    <div class="col-md-6 col-lg-4">
+        <div class="card h-100 shadow-sm hover-shadow">
+            {% if hall.picture %}
+                {# Show uploaded hall image #}
+                <img src="{{ hall.picture }}" class="card-img-top" alt="{{ hall.title }}">
+            {% else %}
+                {# Fallback placeholder if no picture stored #}
+                <img src="https://via.placeholder.com/400x250?text={{ hall.title|replace(' ', '+') }}"
+                     class="card-img-top"
+                     alt="{{ hall.title }}">
+            {% endif %}
+
+            <div class="card-body">
+                <h5 class="card-title">{{ hall.title }}</h5>
+                <ul class="list-unstyled">
+                    <li><strong>Capacity:</strong> {{ hall.capacity }} people</li>
+                    <li><strong>Price:</strong> ₹{{ hall.price_per_hour }}/hour</li>
+                    <li><strong>Address:</strong> {{ hall.address }}</li>
+                </ul>
+                <p class="card-text">{{ hall.description[:100] }}...</p>
+                <a href="{{ url_for('organizer.book_hall', hall_id=str(hall._id)) }}"
+                   class="btn btn-success w-100">
+                    Book This Hall
+                </a>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="col-12">
+        <div class="alert alert-info text-center">
+            No halls available. Contact admin.
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

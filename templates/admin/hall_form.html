@@ -1,0 +1,16 @@
+{% extends "layout_admin.html" %}
+{% block admin_title %}Add Hall{% endblock %}
+{% block admin_content %}
+<!-- Same form as modal, full page -->
+<div class="card">
+    <div class="card-header">
+        <h5>Add New Event Hall</h5>
+    </div>
+    <div class="card-body">
+        <form method="POST" enctype="multipart/form-data">
+            <!-- All hall fields here -->
+            <button type="submit" class="btn btn-primary">Add Hall</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

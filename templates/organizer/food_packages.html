@@ -1,0 +1,45 @@
+{% extends "layout_org.html" %}
+{% block title %}Food Packages - EventHub{% endblock %}
+
+{% block org_content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h5 class="mb-0">Available Food Packages</h5>
+</div>
+
+<div class="row">
+  {% for pkg in packages %}
+  <div class="col-md-4 mb-4">
+    <div class="card hall-card h-100 d-flex flex-column">
+      {% if pkg.picture %}
+        <img src="{{ pkg.picture }}" class="card-img-top" alt="{{ pkg.name }}">
+      {% endif %}
+
+      <div class="card-body d-flex flex-column">
+        <h5 class="card-title">{{ pkg.name }}</h5>
+
+        <p class="card-text mb-1">
+          ₹{{ pkg.price }} per plate
+        </p>
+
+        <p class="card-text text-muted small mb-3">
+          {{ pkg.description }}
+        </p>
+
+        <div class="mt-auto text-right">
+          <a href="{{ url_for('organizer.book_food', package_id=pkg._id) }}"
+             class="btn btn-primary btn-sm">
+            Book Food
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% else %}
+  <div class="col-12">
+    <div class="alert alert-info text-center">
+      No food packages added yet.
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

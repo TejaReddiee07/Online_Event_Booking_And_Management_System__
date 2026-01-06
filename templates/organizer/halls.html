@@ -1,0 +1,46 @@
+{% extends "layout_org.html" %}
+{% block title %}Organizer Halls - EventHub{% endblock %}
+
+{% block org_content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h5 class="mb-0">Available Event Halls</h5>
+</div>
+
+<div class="row">
+    {% for hall in halls %}
+    <div class="col-md-4 mb-4">
+        <div class="card hall-card h-100">
+
+            {# IMAGE: use Mongo 'picture' field #}
+            {% if hall.picture %}
+                <img src="{{ hall.picture }}"
+                     class="card-img-top"
+                     alt="{{ hall.title }}"
+                     style="height: 180px; object-fit: cover;">
+            {% endif %}
+
+            <div class="card-body">
+                <h5 class="card-title">{{ hall.title }}</h5>
+                <p class="card-text mb-1">
+                    {{ hall.capacity }} people | ₹{{ hall.price_per_hour }}/hr
+                </p>
+                <p class="card-text text-muted mb-3">
+                    {{ hall.address }}
+                </p>
+
+                <a href="{{ url_for('organizer.book_hall', hall_id=hall._id) }}"
+                   class="btn btn-primary btn-sm w-100">
+                    Book Now
+                </a>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="col-12">
+        <div class="alert alert-info text-center">
+            No halls added yet.
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

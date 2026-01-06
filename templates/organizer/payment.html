@@ -1,0 +1,52 @@
+{% extends "layout_org.html" %}
+{% block org_title %}Payment{% endblock %}
+{% block org_content %}
+<div class="row justify-content-center mt-5">
+    <div class="col-md-8 col-lg-6">
+        <div class="card shadow">
+            <div class="card-header bg-success text-white text-center">
+                <h4>Payment Details</h4>
+            </div>
+            <div class="card-body">
+                <div class="mb-4 p-3 border rounded">
+                    <h5>Total: ₹<span id="payment_total">0</span></h5>
+                    <p>Hall: <strong id="hall_name"></strong></p>
+                    <p>Duration: <strong id="duration"></strong></p>
+                </div>
+                <form id="paymentForm">
+                    <div class="mb-3">
+                        <label class="form-label">Card Number</label>
+                        <input type="text" class="form-control" placeholder="1234 5678 9012 3456">
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Card Holder Name</label>
+                            <input type="text" class="form-control" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">CVV</label>
+                            <input type="text" maxlength="3" class="form-control">
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label">OR Scan QR/UPI</label>
+                        <div class="border p-4 text-center bg-light rounded">
+                            <div class="qr-placeholder mb-2">📱 UPI QR</div>
+                            <small>Pay to: eventhub@upi | Amount: ₹<span id="upi_amount">0</span></small>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-success w-100 btn-lg">Pay & Confirm Booking</button>
+                </form>
+                <div class="alert alert-info mt-3 text-center">
+                    <small>Demo: Payment simulated. Booking sent for admin approval.</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    // Populate from session/form (in production)
+    document.getElementById('payment_total').textContent = {{ request.form.total_price or 0 }};
+    document.getElementById('upi_amount').textContent = {{ request.form.total_price or 0 }};
+</script>
+{% endblock %}

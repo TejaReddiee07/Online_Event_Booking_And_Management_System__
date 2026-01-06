@@ -1,0 +1,30 @@
+{% extends "layout_org.html" %}
+{% block org_title %}Dashboard{% endblock %}
+
+{% block org_content %}
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card bg-primary text-white text-center">
+            <div class="card-body">
+                <h3>Browse Event Halls</h3>
+                <p class="lead">View available halls and book your event</p>
+                <a href="{{ url_for('organizer.halls_list') }}" class="btn btn-light btn-lg">
+                    View Halls
+                </a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card bg-success text-white text-center">
+            <div class="card-body">
+                <h3>My Bookings</h3>
+                <p class="lead">{{ total_bookings }} bookings</p>
+                <a href="{{ url_for('organizer.bookings') }}" class="btn btn-light btn-lg">
+                    View Bookings
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+<p>Welcome back! Use the sidebar to manage your events.</p>
+{% endblock %}

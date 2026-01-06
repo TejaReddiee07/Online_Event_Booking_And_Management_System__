@@ -1,0 +1,36 @@
+{% extends "layout_admin.html" %}
+
+{% block admin_title %}Dashboard{% endblock %}
+
+{% block admin_content %}
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card text-center bg-primary text-white">
+            <div class="card-body">
+                <h5>{{ organizer_count }}</h5>
+                <p>Total Organizers</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-center bg-success text-white">
+            <div class="card-body">
+                <h5>{{ halls_count }}</h5>
+                <p>Event Halls</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-center bg-info text-white">
+            <div class="card-body">
+                <h5>{{ pending_count }}</h5>
+                <p>Pending Bookings</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<p class="lead">
+    Manage organizers, halls, food packages, and approve bookings from the sidebar.
+</p>
+{% endblock %}

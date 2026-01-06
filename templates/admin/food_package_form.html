@@ -1,0 +1,59 @@
+<form method="POST" enctype="multipart/form-data">
+    {# Name #}
+    <div class="mb-3">
+        <label class="form-label">Name</label>
+        <input type="text" name="name" class="form-control" required>
+    </div>
+
+    {# Meal type #}
+    <div class="mb-3">
+        <label class="form-label d-block">Meal Type</label>
+        <div class="form-check form-check-inline">
+            <input class="form-check-input" type="checkbox" name="breakfast" id="breakfast" value="yes">
+            <label class="form-check-label" for="breakfast">Breakfast</label>
+        </div>
+        <div class="form-check form-check-inline">
+            <input class="form-check-input" type="checkbox" name="lunch" id="lunch" value="yes">
+            <label class="form-check-label" for="lunch">Lunch</label>
+        </div>
+        <div class="form-check form-check-inline">
+            <input class="form-check-input" type="checkbox" name="dinner" id="dinner" value="yes">
+            <label class="form-check-label" for="dinner">Dinner</label>
+        </div>
+    </div>
+
+    {# Veg / Non‑Veg selector (keep if you want) #}
+    <div class="mb-3">
+        <label class="form-label d-block">Package Type</label>
+        <div class="form-check form-check-inline">
+            <input class="form-check-input" type="radio" name="package_type" id="veg_pkg" value="veg" checked>
+            <label class="form-check-label" for="veg_pkg">Veg</label>
+        </div>
+        <div class="form-check form-check-inline">
+            <input class="form-check-input" type="radio" name="package_type" id="nonveg_pkg" value="non_veg">
+            <label class="form-check-label" for="nonveg_pkg">Non‑Veg</label>
+        </div>
+    </div>
+
+    {# Price #}
+    <div class="mb-3">
+        <label class="form-label">Price (₹ per plate)</label>
+        <input type="number" name="price" class="form-control" min="1" required>
+    </div>
+
+    {# Picture #}
+    <div class="mb-3">
+        <label class="form-label">Picture</label>
+        <input type="file" name="picture" class="form-control" accept="image/*">
+    </div>
+
+    {# Single description (you type items here) #}
+    <div class="mb-3">
+        <label class="form-label">Description</label>
+        <textarea name="description" class="form-control" rows="3"></textarea>
+    </div>
+
+    <div class="text-center">
+        <button type="submit" class="btn btn-primary btn-lg">Add Package</button>
+    </div>
+</form>

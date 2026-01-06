@@ -1,0 +1,70 @@
+{% extends "layout_org.html" %}
+{% block title %}Book Food - EventHub{% endblock %}
+
+{% block org_content %}
+<div class="row justify-content-center">
+  <div class="col-md-6">
+    <div class="card hall-card">
+      <div class="card-body">
+        <h4 class="card-title mb-3">Book Food Package</h4>
+
+        <h5 class="mb-1">{{ package.name }}</h5>
+        <p class="text-muted small mb-3">
+          Price per plate: ₹{{ package.price }}
+        </p>
+
+        <form method="post" id="food-booking-form">
+          <div class="mb-3">
+            <label class="form-label">Number of Plates</label>
+            <input type="number"
+                   name="plates"
+                   id="plates"
+                   class="form-control"
+                   min="1"
+                   required>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Total Price (₹)</label>
+            <input type="number"
+                   name="total_price"
+                   id="total_price"
+                   class="form-control"
+                   min="0"
+                   step="0.01"
+                   readonly>
+          </div>
+
+          <button type="submit" class="btn btn-success">
+            Confirm Food Booking
+          </button>
+          <a href="{{ url_for('organizer.food_packages') }}"
+             class="btn btn-secondary ms-2">
+            Cancel
+          </a>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  (function () {
+    const pricePerPlate = {{ (package.price or 0)|float }};
+    const platesInput = document.getElementById('plates');
+    const totalInput = document.getElementById('total_price');
+
+    function calcTotal() {
+      const plates = parseInt(platesInput.value || '0', 10);
+      if (!plates || plates < 1) {
+        totalInput.value = '';
+        return;
+      }
+      const total = pricePerPlate * plates;
+      totalInput.value = total.toFixed(2);
+    }
+
+    platesInput.addEventListener('input', calcTotal);
+  })();
+</script>
+{% endblock %}

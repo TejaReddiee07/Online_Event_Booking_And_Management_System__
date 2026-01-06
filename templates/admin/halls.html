@@ -1,0 +1,72 @@
+{% extends "layout_admin.html" %}
+{% block admin_title %}Event Halls{% endblock %}
+{% block admin_content %}
+<button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#hallModal">Add Hall</button>
+
+<div class="row">
+    {% for hall in halls %}
+    <div class="col-md-6 col-lg-4 mb-4">
+        <div class="card h-100 shadow-sm">
+            {% if hall.picture %}
+                {# show uploaded hall image #}
+                <img src="{{ hall.picture }}" class="card-img-top" alt="{{ hall.title }}">
+            {% else %}
+                {# fallback placeholder if no picture stored #}
+                <img src="https://via.placeholder.com/300x200?text={{ hall.title|replace(' ', '+') }}"
+                     class="card-img-top"
+                     alt="{{ hall.title }}">
+            {% endif %}
+            <div class="card-body">
+                <h5 class="card-title">{{ hall.title }}</h5>
+                <p class="card-text">{{ hall.capacity }} people | ₹{{ hall.price_per_hour }}/hr</p>
+                <p class="small">{{ hall.address }}</p>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Add Hall Modal -->
+<div class="modal fade" id="hallModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <form method="POST" enctype="multipart/form-data">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add Event Hall</h5>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Title</label>
+                        <input type="text" name="title" class="form-control" required>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Capacity</label>
+                            <input type="number" name="capacity" class="form-control" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Price per Hour (₹)</label>
+                            <input type="number" step="0.01" name="price" class="form-control" required>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Picture</label>
+                        <input type="file" name="picture" class="form-control">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Address</label>
+                        <textarea name="address" class="form-control" rows="2" required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Description</label>
+                        <textarea name="description" class="form-control" rows="3" required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary">Add Hall</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

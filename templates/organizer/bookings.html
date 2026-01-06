@@ -1,0 +1,46 @@
+{% extends "layout_org.html" %}
+{% block org_title %}My Bookings{% endblock %}
+
+{% block org_content %}
+<div class="table-responsive">
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Event Name</th>
+                <th>Hall</th>
+                <th>Dates</th>
+                <th>People</th>
+                <th>Status</th>
+                <th>Total (₹)</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for booking in bookings %}
+            <tr class="{% if booking.status == 'approved' %}table-success{% elif booking.status == 'pending' %}table-warning{% endif %}">
+                <td>{{ booking.event_name }}</td>
+                <td>
+                    {% set hall = halls.get(booking.hall_id) %}
+                    {{ hall.title if hall else 'N/A' }}
+                </td>
+                <td>{{ booking.from_date }} to {{ booking.to_date }}</td>
+                <td>{{ booking.num_people }}</td>
+                <td>
+                    {% set status = booking.get('status', 'pending') %}
+                    <span class="badge bg-{{ 'success' if status == 'approved' else 'warning' }}">
+                        {{ status.upper() }}
+                    </span>
+                </td>
+                <td>₹{{ booking.total_price }}</td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="6" class="text-center">
+                    No bookings yet.
+                    <a href="{{ url_for('organizer.halls_list') }}">Book now</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

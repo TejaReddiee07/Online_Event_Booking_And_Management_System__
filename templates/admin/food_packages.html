@@ -1,0 +1,107 @@
+{% extends "layout_admin.html" %}
+{% block admin_title %}Food Packages{% endblock %}
+
+{% block extra_css %}
+<style>
+  .hall-card img {
+      height: 180px;
+      width: 100%;
+      object-fit: cover;
+  }
+
+  /* make price + description clearly visible */
+  .hall-card .card-title,
+  .hall-card .card-text {
+      color: #faf8f8 !important;
+  }
+</style>
+{% endblock %}
+
+
+{% block admin_content %}
+<button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#foodModal">
+    Add Food Package
+</button>
+
+<div class="row">
+    {% for food in foods %}
+    <div class="col-md-4 mb-4">
+        <div class="card hall-card h-100">
+            {% if food.picture %}
+              <img src="{{ food.picture }}"
+                   class="card-img-top"
+                   alt="{{ food.name }}">
+            {% endif %}
+
+<div class="card-body">
+  <h5 class="card-title">{{ food.name }}</h5>
+  <p class="card-text mb-1">
+    ₹{{ food.price }} per plate
+  </p>
+  <p class="card-text text-muted small">
+    {{ food.description }}
+  </p>
+</div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Add Food Modal -->
+<div class="modal fade" id="foodModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form method="POST" enctype="multipart/form-data">
+        <div class="modal-header">
+          <h5 class="modal-title">Add Food Package</h5>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label">Name</label>
+            <input type="text" name="name" class="form-control" required>
+          </div>
+
+          <div class="row mb-3">
+            <div class="col-4">
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" name="breakfast" id="breakfast">
+                <label class="form-check-label" for="breakfast">Breakfast</label>
+              </div>
+            </div>
+            <div class="col-4">
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" name="lunch" id="lunch">
+                <label class="form-check-label" for="lunch">Lunch</label>
+              </div>
+            </div>
+            <div class="col-4">
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" name="dinner" id="dinner">
+                <label class="form-check-label" for="dinner">Dinner</label>
+              </div>
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Price (₹ per plate)</label>
+            <input type="number" step="0.01" name="price" class="form-control" required>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Picture</label>
+            <input type="file" name="picture" class="form-control">
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Description</label>
+            <textarea name="description" class="form-control" rows="3"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary">Add Package</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

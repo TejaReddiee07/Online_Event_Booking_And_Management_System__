@@ -1,0 +1,107 @@
+{% extends "layout_org.html" %}
+{% block title %}Book Hall - EventHub{% endblock %}
+
+{% block org_content %}
+{% set price_per_hour = hall.price if hall.price is defined else hall.price_per_hour %}
+
+<div class="row justify-content-center">
+  <div class="col-md-7">
+    <div class="card hall-card">
+      <div class="card-body">
+        <h4 class="card-title mb-3">Book Hall</h4>
+
+        <h5 class="mb-1">{{ hall.title }}</h5>
+        <p class="text-muted small mb-4">
+          Location: {{ hall.location }} |
+          Capacity: {{ hall.capacity }} |
+          Price per hour: ₹{{ price_per_hour }}
+        </p>
+
+        <form method="post" id="hall-booking-form">
+          <div class="mb-3">
+            <label class="form-label">Event Name</label>
+            <input name="event_name" class="form-control" required>
+          </div>
+
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label class="form-label">From Date</label>
+              <input type="date" name="from_date" id="from_date"
+                     class="form-control" required>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">To Date</label>
+              <input type="date" name="to_date" id="to_date"
+                     class="form-control" required>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Number of Hours</label>
+              <input type="number" name="num_hours" id="num_hours"
+                     class="form-control" min="1" required>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Number of People (Max: {{ hall.capacity }})</label>
+              <input type="number" name="num_people" id="num_people"
+                     class="form-control" 
+                     min="1" 
+                     max="{{ hall.capacity }}" 
+                     required>
+              <small class="text-muted">Maximum capacity: {{ hall.capacity }} people</small>
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Total Price (₹)</label>
+            <input type="number" name="total_price" id="total_price"
+                   class="form-control" min="0" step="0.01" readonly>
+          </div>
+
+          <button type="submit" class="btn btn-success">
+            Confirm Booking
+          </button>
+          <a href="{{ url_for('organizer.halls_list') }}"
+             class="btn btn-secondary ms-2">
+            Cancel
+          </a>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  (function () {
+    const pricePerHour = {{ (price_per_hour or 0)|float }};
+    const maxCapacity = {{ hall.capacity }};
+    const hoursInput = document.getElementById('num_hours');
+    const peopleInput = document.getElementById('num_people');
+    const totalInput = document.getElementById('total_price');
+
+    function calcTotal() {
+      const hours = parseInt(hoursInput.value || '0', 10);
+
+      if (!hours || hours < 1) {
+        totalInput.value = '';
+        return;
+      }
+
+      const total = pricePerHour * hours;
+      totalInput.value = total.toFixed(2);
+    }
+
+    // Validate capacity limit
+    peopleInput.addEventListener('input', function() {
+      const people = parseInt(this.value || '0', 10);
+      if (people > maxCapacity) {
+        this.value = maxCapacity;
+        alert(`Maximum capacity is ${maxCapacity} people!`);
+      }
+    });
+
+    hoursInput.addEventListener('input', calcTotal);
+  })();
+</script>
+{% endblock %}
