@@ -255,16 +255,19 @@ def food_bookings():
         b['organizer_name'] = organizer['name'] if organizer else 'N/A'
         b['organizer_email'] = organizer.get('email', '') if organizer else ''
         b['hall_name'] = '-'      # no hall
-        b['from_date'] = '-'      # not applicable
-        b['to_date'] = '-'
+
+        # keep the dates from the food booking
+        b['from_date'] = b.get('from_date', '-')
+        b['to_date'] = b.get('to_date', '-')
+
         b['total_price'] = b.get('total_price', 0)
         b['combined_type'] = 'Food Only'
         b['_id'] = b['_id']
-        # NEW: for template display
         b['food_plates'] = b.get('plates', 0)
         b['food_total'] = b.get('total_price', 0)
 
     return render_template('admin/bookings.html', bookings=bookings)
+
 
 
 # ---------------- HALL + FOOD BOOKINGS ----------------
