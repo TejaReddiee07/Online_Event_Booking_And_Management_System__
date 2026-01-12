@@ -2,11 +2,11 @@ from flask import Blueprint, render_template, request, redirect, url_for, sessio
 from extensions import mongo
 from utils_security import verify_password, hash_password
 
+
 auth_bp = Blueprint('auth', __name__)
 
 
 # ------------- SHARED DECORATOR -------------
-
 def login_required(f):
     def wrap(*args, **kwargs):
         if 'user_id' not in session:
@@ -17,7 +17,6 @@ def login_required(f):
 
 
 # ------------- ADMIN AUTH -------------
-
 @auth_bp.route('/admin/login', methods=['GET', 'POST'])
 def admin_login():
     if request.method == 'POST':
@@ -49,9 +48,11 @@ def admin_register():
 
 
 # ------------- ORGANIZER AUTH -------------
-
 @auth_bp.route('/organizer/login', methods=['GET', 'POST'])
 def organizer_login():
+    # value passed from home buttons: event / hall / food
+    next_action = request.args.get('next', 'event')
+
     if request.method == 'POST':
         email = request.form['email']
         password = request.form['password']
@@ -60,10 +61,19 @@ def organizer_login():
         if org and verify_password(org['password'], password):
             session['user_id'] = str(org['_id'])
             session['role'] = 'organizer'
-            flash('Organizer login successful')
-            return redirect(url_for('organizer.dashboard'))
+            flash('user login successful')
+
+            # redirect based on what user clicked on home page
+            if next_action == 'hall':
+                return redirect(url_for('organizer.halls_list'))
+            elif next_action == 'food':
+                return redirect(url_for('organizer.food_packages'))
+            else:  # 'event' or anything else
+                return redirect(url_for('organizer.dashboard'))
+
         flash('Invalid organizer credentials')
-    return render_template('auth/organizer_login.html')
+
+    return render_template('auth/organizer_login.html', next=next_action)
 
 
 @auth_bp.route('/organizer/register', methods=['GET', 'POST'])
@@ -77,9 +87,9 @@ def organizer_register():
             'address': request.form['address']
         }
         if mongo.db.organizers.find_one({'email': data['email']}):
-            flash('Organizer email already exists')
+            flash('user email already exists')
         else:
             mongo.db.organizers.insert_one(data)
-            flash('Organizer registered. Please login.')
+            flash('user registered. Please login.')
             return redirect(url_for('auth.organizer_login'))
     return render_template('auth/organizer_register.html')

@@ -1,59 +1,128 @@
-{% extends "layout_admin.html" %}
+{% extends "base.html" %}
+
 {% block title %}Manage Bookings - Admin{% endblock %}
 
-{% block admin_content %}
-<h3 class="mb-4">All Bookings</h3>
+{% block content %}
+<div class="row">
+    <!-- Left sidebar -->
+    <div class="col-md-3 col-lg-2 mb-4">
+        <div class="list-group">
+            <a href="{{ url_for('admin.dashboard') }}" class="list-group-item list-group-item-action">
+                Dashboard
+            </a>
+            <a href="{{ url_for('admin.organizers') }}" class="list-group-item list-group-item-action">
+                Organizers
+            </a>
+            <a href="{{ url_for('admin.halls') }}" class="list-group-item list-group-item-action">
+                Event Halls
+            </a>
+            <a href="{{ url_for('admin.food_packages') }}" class="list-group-item list-group-item-action">
+                Food Packages
+            </a>
+            <a href="{{ url_for('admin.bookings') }}" class="list-group-item list-group-item-action active">
+                All Bookings
+            </a>
+            <a href="{{ url_for('admin.hall_bookings') }}" class="list-group-item list-group-item-action">
+                Hall Bookings
+            </a>
+            <a href="{{ url_for('admin.food_bookings') }}" class="list-group-item list-group-item-action">
+                Food Bookings
+            </a>
+            <a href="{{ url_for('admin.hall_food_bookings') }}" class="list-group-item list-group-item-action">
+                Hall + Food Bookings
+            </a>
+            <a href="{{ url_for('logout') }}" class="list-group-item list-group-item-action text-danger">
+                Logout
+            </a>
+        </div>
+    </div>
 
-{% if bookings %}
-<div class="table-responsive">
-    <table class="table table-striped">
-        <thead>
-            <tr>
-                <th>Organizer</th>
-                <th>Hall</th>
-                <th>Event Name</th>
-                <th>From</th>
-                <th>To</th>
-                <th>People</th>
-                <th>Total (₹)</th>
-                <th>Status</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for booking in bookings %}
-            <tr>
-                <td>{{ booking.organizer_name }}</td>
-                <td>{{ booking.hall_name }}</td>
-                <td>{{ booking.event_name or 'N/A' }}</td>
-                <td>{{ booking.from_date }}</td>
-                <td>{{ booking.to_date }}</td>
-                <td>{{ booking.num_people }}</td>
-                <td>₹{{ booking.total_price }}</td>
-                <td>
-                    {% set status = booking.get('status', 'pending') %}
-                    <span class="badge bg-{{ 'success' if status == 'approved' else 'warning' }}">
-                        {{ status.upper() }}
-                    </span>
-                </td>
-                <td>
-                    {% if booking.get('status', 'pending') == 'pending' %}
-                    <a href="{{ url_for('admin.approve', booking_id=booking._id) }}"
-                       class="btn btn-sm btn-success">
-                        Approve
-                    </a>
-                    {% else %}
-                    <span class="text-success">✓ Approved</span>
-                    {% endif %}
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    <!-- Main content -->
+    <div class="col-md-9 col-lg-10">
+        <div class="card shadow-sm">
+            <div class="card-header">
+                <h4 class="mb-0">Bookings</h4>
+            </div>
+            <div class="card-body">
+                {% if bookings %}
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Organizer</th>
+                                <th>Hall</th>
+                                <th>Event Name</th>
+                                <th>From</th>
+                                <th>To</th>
+                                <th>People</th>
+                                <th>Hall Total (₹)</th>
+                                <th>Food Plates</th>
+                                <th>Food Total (₹)</th>
+                                <th>Type</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for booking in bookings %}
+                            <tr>
+                                <td>{{ booking.organizer_name }}</td>
+                                <td>{{ booking.hall_name }}</td>
+                                <td>{{ booking.event_name or 'N/A' }}</td>
+                                <td>{{ booking.from_date }}</td>
+                                <td>{{ booking.to_date }}</td>
+                                <td>{{ booking.num_people or '-' }}</td>
+
+                                {# same as old Total column, just renamed to Hall Total #}
+                                <td>₹{{ booking.total_price }}</td>
+
+                                {# new: food plates #}
+                                <td>
+                                    {% if booking.combined_type == 'Hall + Food' or booking.combined_type == 'Food Only' %}
+                                        {{ booking.food_plates or '-' }}
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+
+                                {# new: food total #}
+                                <td>
+                                    {% if booking.combined_type == 'Hall + Food' or booking.combined_type == 'Food Only' %}
+                                        ₹{{ booking.food_total or 0 }}
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+
+                                <td>{{ booking.combined_type or 'Hall Only' }}</td>
+                                <td>
+                                    {% set status = booking.get('status', 'pending') %}
+                                    <span class="badge bg-{{ 'success' if status == 'approved' else 'warning' }}">
+                                        {{ status.upper() }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if booking.get('status', 'pending') == 'pending' %}
+                                    <a href="{{ url_for('admin.approve', booking_id=booking._id) }}"
+                                       class="btn btn-sm btn-success">
+                                        Approve
+                                    </a>
+                                    {% else %}
+                                    <span class="text-success">✓ Approved</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="alert alert-info">
+                    No bookings found.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
 </div>
-{% else %}
-<div class="alert alert-info">
-    No bookings found.
-</div>
-{% endif %}
 {% endblock %}

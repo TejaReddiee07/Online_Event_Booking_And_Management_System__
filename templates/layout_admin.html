@@ -15,7 +15,13 @@
                         <a href="{{ url_for('admin.organizers') }}" class="list-group-item">Organizers</a>
                         <a href="{{ url_for('admin.halls') }}" class="list-group-item">Event Halls</a>
                         <a href="{{ url_for('admin.food_packages') }}" class="list-group-item">Food Packages</a>
-                        <a href="{{ url_for('admin.bookings') }}" class="list-group-item">Bookings</a>
+
+                        <!-- Bookings filters -->
+                        <a href="{{ url_for('admin.bookings') }}" class="list-group-item">All Bookings</a>
+                        <a href="{{ url_for('admin.hall_bookings') }}" class="list-group-item">Hall Bookings</a>
+                        <a href="{{ url_for('admin.food_bookings') }}" class="list-group-item">Food Bookings</a>
+                        <a href="{{ url_for('admin.hall_food_bookings') }}" class="list-group-item">Hall + Food Bookings</a>
+
                         <a href="{{ url_for('logout') }}" class="list-group-item text-danger">Logout</a>
                     </div>
                 </div>

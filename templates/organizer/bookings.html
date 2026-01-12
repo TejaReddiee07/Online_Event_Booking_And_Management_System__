@@ -3,44 +3,71 @@
 
 {% block org_content %}
 <div class="table-responsive">
-    <table class="table table-striped">
-        <thead>
-            <tr>
-                <th>Event Name</th>
-                <th>Hall</th>
-                <th>Dates</th>
-                <th>People</th>
-                <th>Status</th>
-                <th>Total (₹)</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for booking in bookings %}
-            <tr class="{% if booking.status == 'approved' %}table-success{% elif booking.status == 'pending' %}table-warning{% endif %}">
-                <td>{{ booking.event_name }}</td>
-                <td>
-                    {% set hall = halls.get(booking.hall_id) %}
-                    {{ hall.title if hall else 'N/A' }}
-                </td>
-                <td>{{ booking.from_date }} to {{ booking.to_date }}</td>
-                <td>{{ booking.num_people }}</td>
-                <td>
-                    {% set status = booking.get('status', 'pending') %}
-                    <span class="badge bg-{{ 'success' if status == 'approved' else 'warning' }}">
-                        {{ status.upper() }}
-                    </span>
-                </td>
-                <td>₹{{ booking.total_price }}</td>
-            </tr>
-            {% else %}
-            <tr>
-                <td colspan="6" class="text-center">
-                    No bookings yet.
-                    <a href="{{ url_for('organizer.halls_list') }}">Book now</a>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Event Name</th>
+            <th>Hall</th>
+            <th>Dates</th>
+            <th>People</th>
+            <th>Hall Total (₹)</th>
+            <th>Food Plates</th>
+            <th>Food Total (₹)</th>
+            <th>Type</th>
+            <th>Status</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for booking in bookings %}
+        <tr class="{{ 'table-success' if booking.status == 'approved' else 'table-warning' }}">
+            <td>{{ booking.event_name }}</td>
+            <td>{{ booking.hall_name }}</td>
+<td>
+  {% if booking.combined_type == 'Food Only' and booking.from_date == booking.to_date %}
+      {{ booking.from_date }}
+  {% else %}
+      {{ booking.from_date }} to {{ booking.to_date }}
+  {% endif %}
+</td>
+
+
+
+            <td>{{ booking.num_people }}</td>
+
+            <!-- hall total (same as old Total column) -->
+            <td>₹{{ booking.total_price }}</td>
+
+            <!-- food plates -->
+            <td>
+                {% if booking.combined_type == 'Hall + Food' or booking.combined_type == 'Food Only' %}
+                    {{ booking.food_plates or '-' }}
+                {% else %}
+                    -
+                {% endif %}
+            </td>
+
+            <!-- food total -->
+            <td>
+                {% if booking.combined_type == 'Hall + Food' or booking.combined_type == 'Food Only' %}
+                    ₹{{ booking.food_total or 0 }}
+                {% else %}
+                    -
+                {% endif %}
+            </td>
+
+            <!-- type -->
+            <td>{{ booking.combined_type or 'Hall Only' }}</td>
+
+            <!-- status badge (unchanged) -->
+            <td>
+                <span class="badge bg-{{ 'success' if booking.status == 'approved' else 'warning' }}">
+                    {{ booking.status.upper() }}
+                </span>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
 </div>
 {% endblock %}

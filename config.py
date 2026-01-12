@@ -5,7 +5,7 @@ load_dotenv()
 
 class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'dev-key-change-me'
-    MONGO_URI = os.environ.get('MONGO_URI') or 'mongodb://localhost:27017/eventdb'
+    MONGO_URI = os.environ.get('MONGO_URI') or 'mongodb+srv://TejaReddiee07:7994693055nagateja@cluster0.ylba7.mongodb.net/Eventdb'
 
     # Add these lines with YOUR details:
     MAIL_FROM = 'tteddy2004bear@gmail.com'        # ← Your Gmail

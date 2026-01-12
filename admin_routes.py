@@ -9,7 +9,10 @@ from werkzeug.utils import secure_filename
 from extensions import mongo
 from auth_routes import login_required
 from utils_security import hash_password
-from utils_email import send_booking_confirm_email, send_booking_confirm_email_with_food
+from utils_email import (
+    send_booking_confirm_email,
+    send_booking_confirm_email_with_food,
+)
 
 
 admin_bp = Blueprint('admin', __name__)
@@ -93,16 +96,13 @@ def halls():
         flash('Hall added!')
         return redirect(url_for('admin.halls'))
 
-    # Get location filter
     selected_location = request.args.get('location', 'all')
 
-    # Filter halls
     if selected_location == 'all':
         halls_list = list(mongo.db.halls.find({}))
     else:
         halls_list = list(mongo.db.halls.find({'location': selected_location}))
 
-    # Get all unique locations for filter buttons
     all_locations = mongo.db.halls.distinct('location')
 
     return render_template('admin/halls.html', halls=halls_list, all_locations=all_locations)
@@ -159,17 +159,15 @@ def food_packages():
     return render_template('admin/food_packages.html', foods=foods)
 
 
+# ---------------- ALL BOOKINGS ----------------
 @admin_bp.route('/bookings')
 @login_required
 def bookings():
     require_admin(session.get('role'))
-    
-    # Fetch all bookings
+
     bookings_list = list(mongo.db.bookings.find())
-    
-    # Enrich each booking with organizer and hall details
+
     for booking in bookings_list:
-        # Fetch organizer
         if 'org_id' in booking:
             organizer = mongo.db.organizers.find_one({'_id': booking['org_id']})
             booking['organizer_name'] = organizer['name'] if organizer else 'N/A'
@@ -177,17 +175,141 @@ def bookings():
         else:
             booking['organizer_name'] = 'N/A'
             booking['organizer_email'] = ''
-        
-        # Fetch hall
+
         if 'hall_id' in booking:
             hall = mongo.db.halls.find_one({'_id': booking['hall_id']})
             booking['hall_name'] = hall['title'] if hall else 'N/A'
         else:
             booking['hall_name'] = 'N/A'
-    
+
+        if booking.get('linked_food_booking'):
+            booking['combined_type'] = 'Hall + Food'
+            # NEW: attach food price and plates for display
+            food_booking = mongo.db.food_bookings.find_one(
+                {'_id': booking['linked_food_booking']}
+            )
+            if food_booking:
+                booking['food_plates'] = food_booking.get('plates', 0)
+                booking['food_total'] = food_booking.get('total_price', 0)
+        else:
+            booking['combined_type'] = 'Hall Only'
+            booking['food_plates'] = None
+            booking['food_total'] = None
+
     return render_template('admin/bookings.html', bookings=bookings_list)
 
 
+# ---------------- HALL-ONLY BOOKINGS ----------------
+@admin_bp.route('/hall-bookings')
+@login_required
+def hall_bookings():
+    require_admin(session.get('role'))
+
+    bookings_list = list(mongo.db.bookings.find({
+        'booking_type': 'hall',
+        '$or': [
+            {'linked_food_booking': {'$exists': False}},
+            {'linked_food_booking': None},
+        ],
+    }))
+
+    for booking in bookings_list:
+        if 'org_id' in booking:
+            organizer = mongo.db.organizers.find_one({'_id': booking['org_id']})
+            booking['organizer_name'] = organizer['name'] if organizer else 'N/A'
+            booking['organizer_email'] = organizer.get('email', '') if organizer else ''
+        else:
+            booking['organizer_name'] = 'N/A'
+            booking['organizer_email'] = ''
+
+        if 'hall_id' in booking:
+            hall = mongo.db.halls.find_one({'_id': booking['hall_id']})
+            booking['hall_name'] = hall['title'] if hall else 'N/A'
+        else:
+            booking['hall_name'] = 'N/A'
+
+        booking['combined_type'] = 'Hall Only'
+        booking['food_plates'] = None
+        booking['food_total'] = None
+
+    return render_template('admin/bookings.html', bookings=bookings_list)
+
+
+# ---------------- FOOD-ONLY BOOKINGS ----------------
+@admin_bp.route('/food-bookings')
+@login_required
+def food_bookings():
+    require_admin(session.get('role'))
+
+    bookings = list(mongo.db.food_bookings.find({
+        'booking_type': 'food',
+        '$or': [
+            {'linked_hall_booking': {'$exists': False}},
+            {'linked_hall_booking': None},
+        ],
+    }))
+
+    for b in bookings:
+        organizer = mongo.db.organizers.find_one({'_id': b['org_id']})
+        pkg = mongo.db.food_packages.find_one({'_id': b['package_id']})
+        b['organizer_name'] = organizer['name'] if organizer else 'N/A'
+        b['organizer_email'] = organizer.get('email', '') if organizer else ''
+        b['hall_name'] = '-'      # no hall
+        b['from_date'] = '-'      # not applicable
+        b['to_date'] = '-'
+        b['total_price'] = b.get('total_price', 0)
+        b['combined_type'] = 'Food Only'
+        b['_id'] = b['_id']
+        # NEW: for template display
+        b['food_plates'] = b.get('plates', 0)
+        b['food_total'] = b.get('total_price', 0)
+
+    return render_template('admin/bookings.html', bookings=bookings)
+
+
+# ---------------- HALL + FOOD BOOKINGS ----------------
+@admin_bp.route('/hall-food-bookings')
+@login_required
+def hall_food_bookings():
+    require_admin(session.get('role'))
+
+    bookings_list = list(mongo.db.bookings.find({
+        'booking_type': 'hall',
+        'linked_food_booking': {'$exists': True, '$ne': None},
+    }))
+
+    for booking in bookings_list:
+        if 'org_id' in booking:
+            organizer = mongo.db.organizers.find_one({'_id': booking['org_id']})
+            booking['organizer_name'] = organizer['name'] if organizer else 'N/A'
+            booking['organizer_email'] = organizer.get('email', '') if organizer else ''
+        else:
+            booking['organizer_name'] = 'N/A'
+            booking['organizer_email'] = ''
+
+        if 'hall_id' in booking:
+            hall = mongo.db.halls.find_one({'_id': booking['hall_id']})
+            booking['hall_name'] = hall['title'] if hall else 'N/A'
+        else:
+            booking['hall_name'] = 'N/A'
+
+        booking['combined_type'] = 'Hall + Food'
+
+        # NEW: attach food plates and price for this combined booking
+        food_booking = mongo.db.food_bookings.find_one(
+            {'_id': booking['linked_food_booking']}
+        )
+        if food_booking:
+            booking['food_plates'] = food_booking.get('plates', 0)
+            booking['food_total'] = food_booking.get('total_price', 0)
+        else:
+            booking['food_plates'] = None
+            booking['food_total'] = None
+
+    return render_template('admin/bookings.html', bookings=bookings_list)
+
+
+# ---------------- APPROVE BOOKING ----------------
 @admin_bp.route('/approve/<booking_id>')
 @login_required
 def approve(booking_id):
@@ -198,54 +320,67 @@ def approve(booking_id):
         flash('Booking not found.', 'danger')
         return redirect(url_for('admin.bookings'))
 
-    # Mark hall booking as approved
     mongo.db.bookings.update_one(
         {'_id': booking['_id']},
         {'$set': {'status': 'approved'}}
     )
 
-    # Check if there's linked food booking and approve it too
     food_booking = None
-    if 'linked_food_booking' in booking and booking['linked_food_booking']:
-        food_booking = mongo.db.food_bookings.find_one({'_id': booking['linked_food_booking']})
+    if booking.get('linked_food_booking'):
+        food_booking = mongo.db.food_bookings.find_one(
+            {'_id': booking['linked_food_booking']}
+        )
         if food_booking:
             mongo.db.food_bookings.update_one(
                 {'_id': food_booking['_id']},
                 {'$set': {'status': 'approved'}}
             )
 
-    # Fetch organizer & hall info
     organizer = mongo.db.organizers.find_one({'_id': booking['org_id']})
     hall = mongo.db.halls.find_one({'_id': booking['hall_id']})
 
     if organizer and organizer.get('email') and hall:
         try:
-            # Calculate total (hall + food if exists)
-            total_amount = booking.get('total_price', 0)
-            food_details = ""
-            
             if food_booking:
+                total_amount = booking.get('total_price', 0)
+                food_details = ""
                 total_amount += food_booking.get('total_price', 0)
-                food_pkg = mongo.db.food_packages.find_one({'_id': food_booking['package_id']})
-                food_details = f"\nFood: {food_pkg['name']} - {food_booking['plates']} plates (₹{food_booking['total_price']})"
-            
-            send_booking_confirm_email_with_food(
-                to_email=organizer['email'],
-                hall_name=hall.get('title', 'your hall'),
-                hall_location=hall.get('location', 'Not specified'),  # NEW: Add location
-                from_date=booking.get('from_date', ''),
-                to_date=booking.get('to_date', ''),
-                hall_price=booking.get('total_price', 0),
-                food_details=food_details,
-                total_amount=total_amount,
-                booking_id=str(booking['_id'])
-            )
+                food_pkg = mongo.db.food_packages.find_one(
+                    {'_id': food_booking['package_id']}
+                )
+                if food_pkg:
+                    food_details = (
+                        f"\nFood: {food_pkg['name']} - "
+                        f"{food_booking['plates']} plates "
+                        f"(₹{food_booking['total_price']})"
+                    )
+
+                send_booking_confirm_email_with_food(
+                    to_email=organizer['email'],
+                    hall_name=hall.get('title', 'your hall'),
+                    hall_location=hall.get('location', 'Not specified'),
+                    from_date=booking.get('from_date', ''),
+                    to_date=booking.get('to_date', ''),
+                    hall_price=booking.get('total_price', 0),
+                    food_details=food_details,
+                    total_amount=total_amount,
+                    booking_id=str(booking['_id']),
+                )
+            else:
+                send_booking_confirm_email(
+                    to_email=organizer['email'],
+                    hall_name=hall.get('title', 'your hall'),
+                    hall_address=hall.get('address', 'Not specified'),
+                    from_date=booking.get('from_date', ''),
+                    to_date=booking.get('to_date', ''),
+                    total_price=booking.get('total_price', 0),
+                )
+
             flash('Booking(s) approved and organizer notified by email!', 'success')
         except Exception as e:
-            flash(f'Booking approved but email failed: {str(e)}', 'warning')
+            current_app.logger.exception("Email sending failed")
+            flash(f'Booking approved but email failed: {e}', 'warning')
     else:
         flash('Booking approved!', 'success')
 
     return redirect(url_for('admin.bookings'))
-
-

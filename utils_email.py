@@ -1,67 +1,190 @@
-# utils_email.py
 import smtplib
 from email.mime.text import MIMEText
 from config import Config
 
-def send_booking_confirm_email(to_email, hall_name, hall_address, from_date, to_date, total_price):
+
+def _send_raw_email(to_email: str, subject: str, body: str):
+    """Low-level email sender with proper TLS and error handling."""
+    msg = MIMEText(body, _subtype="plain", _charset="utf-8")
+    msg["Subject"] = subject
+    msg["From"] = Config.MAIL_FROM
+    msg["To"] = to_email
+
+    # Guard against missing credentials
+    if not Config.SMTP_USER or not Config.SMTP_PASSWORD:
+        raise RuntimeError("SMTP credentials not configured")
+
+    with smtplib.SMTP(Config.SMTP_HOST, Config.SMTP_PORT, timeout=20) as server:
+        if Config.SMTP_TLS:
+            server.starttls()
+        server.login(Config.SMTP_USER, Config.SMTP_PASSWORD)
+        server.send_message(msg)
+
+
+# ---------------- APPROVAL EMAILS ---------------- #
+
+
+def send_booking_confirm_email(
+    to_email,
+    hall_name,
+    hall_address,
+    from_date,
+    to_date,
+    total_price,
+):
     subject = "Your hall booking is confirmed - EventHub"
-    maps_link = f"https://www.google.com/maps/search/?api=1&query={hall_address.replace(' ', '+')}"
+    maps_link = (
+        f"https://www.google.com/maps/search/?api=1&query="
+        f"{hall_address.replace(' ', '+')}"
+    )
     body = (
-        f"Dear Organizer,\n\n"
-        f"Your booking has been APPROVED!\n\n"
+        "Dear Organizer,\n\n"
+        "Your booking has been APPROVED!\n\n"
         f"Hall: {hall_name}\n"
         f"Address: {hall_address}\n"
         f"Google Maps: {maps_link}\n"
         f"Dates: {from_date} to {to_date}\n"
         f"Total Price: ₹{total_price}\n\n"
-        f"Regards,\n"
-        f"EventHub Team"
+        "Regards,\n"
+        "EventHub Team"
     )
-    # keep the rest of your function exactly same (MIMEText, SMTP, etc.)
+    _send_raw_email(to_email, subject, body)
 
 
-    msg = MIMEText(body)
-    msg['Subject'] = subject
-    msg['From'] = Config.MAIL_FROM
-    msg['To'] = to_email
+def send_booking_confirm_email_with_food(
+    to_email,
+    hall_name,
+    hall_location,
+    from_date,
+    to_date,
+    hall_price,
+    food_details,
+    total_amount,
+    booking_id,
+    base_url="https://online-event-booking-8.onrender.com",
+):
+    subject = "Your booking is confirmed - EventHub"
 
-    with smtplib.SMTP(Config.SMTP_HOST, Config.SMTP_PORT) as server:
-        if Config.SMTP_TLS:
-            server.starttls()
-        server.login(Config.SMTP_USER, Config.SMTP_PASSWORD)
-        server.send_message(msg)
+    # payment_link is no longer included in the email body
 
-
-def send_booking_confirm_email_with_food(to_email, hall_name, hall_location, from_date, to_date, hall_price, food_details, total_amount, booking_id):
-    subject = "Your booking is confirmed - Payment Required - EventHub"
     body = (
-        f"Dear Organizer,\n\n"
-        f"✅ Your booking has been APPROVED!\n\n"
+        "Dear Organizer,\n\n"
+        "✅ Your booking has been APPROVED!\n\n"
         f"🏛️ Hall: {hall_name}\n"
         f"📍 Location: {hall_location}\n"
         f"📆 Dates: {from_date} to {to_date}\n"
         f"💰 Hall Price: ₹{hall_price}\n"
         f"{food_details}\n"
-        f"━━━━━━━━━━━━━━━━━━━━━━\n"
+        "━━━━━━━━━━━━━━━━━━━━━━\n"
         f"💳 TOTAL AMOUNT: ₹{total_amount}\n\n"
-        f"Complete your payment here:\n"
-        f"http://127.0.0.1:5000/organizer/payment/{booking_id}\n\n"
-        f"Payment Options:\n"
-        f"• UPI: eventhub@upi\n"
-        f"• Card: Pay at venue counter\n"
-        f"• Cash: Accepted at venue\n\n"
-        f"You have booked hall and food for your event!\n\n"
-        f"Thank you for using EventHub!\n"
-        f"Team EventHub"
+        "For completing the payment, please contact the admin.\n\n"
+        "Thank you for using EventHub!\n"
+        "Team EventHub"
     )
 
-    msg = MIMEText(body)
-    msg['Subject'] = subject
-    msg['From'] = Config.MAIL_FROM
-    msg['To'] = to_email
+    _send_raw_email(to_email, subject, body)
 
-    with smtplib.SMTP(Config.SMTP_HOST, Config.SMTP_PORT) as server:
-        if Config.SMTP_TLS:
-            server.starttls()
-        server.login(Config.SMTP_USER, Config.SMTP_PASSWORD)
-        server.send_message(msg)
+
+# ---------------- REJECTION EMAILS ---------------- #
+
+
+def send_booking_rejected_email(
+    to_email,
+    hall_name,
+    from_date,
+    to_date,
+    reason: str | None = None,
+):
+    """Hall / hall+food booking rejected."""
+    subject = "Your booking has been rejected - EventHub"
+
+    reason_text = f"Reason: {reason}\n\n" if reason else ""
+    body = (
+        "Dear Organizer,\n\n"
+        "Your booking has been REJECTED by the admin.\n\n"
+        f"Hall: {hall_name}\n"
+        f"Dates: {from_date} to {to_date}\n"
+        f"{reason_text}"
+        "If you have any questions, please contact support or try booking another slot.\n\n"
+        "Regards,\n"
+        "EventHub Team"
+    )
+    _send_raw_email(to_email, subject, body)
+
+
+def send_food_booking_rejected_email(
+    to_email,
+    package_name,
+    event_date,
+    reason: str | None = None,
+):
+    """Food‑only booking rejected."""
+    subject = "Your food booking has been rejected - EventHub"
+
+    reason_text = f"Reason: {reason}\n\n" if reason else ""
+    body = (
+        "Dear Organizer,\n\n"
+        "Your food booking has been REJECTED by the admin.\n\n"
+        f"Food Package: {package_name}\n"
+        f"Event Date: {event_date}\n"
+        f"{reason_text}"
+        "You can try booking another package or contact support for details.\n\n"
+        "Regards,\n"
+        "EventHub Team"
+    )
+    _send_raw_email(to_email, subject, body)
+
+
+def send_booking_auto_rejected_unavailable_email(
+    to_email,
+    hall_name,
+    from_date,
+    to_date,
+):
+    """Auto-reject when same hall & same dates already booked."""
+    subject = "Hall not available for selected dates - EventHub"
+
+    body = (
+        "Dear Organizer,\n\n"
+        "Your booking request has been REJECTED automatically because the hall "
+        "is already booked for the selected date(s).\n\n"
+        f"Hall: {hall_name}\n"
+        f"Dates: {from_date} to {to_date}\n"
+        "Reason: The hall is not available on these dates as another booking already exists.\n\n"
+        "Please try different dates or another hall.\n\n"
+        "Regards,\n"
+        "EventHub Team"
+    )
+
+    _send_raw_email(to_email, subject, body)
+
+
+# ---------------- ADMIN NOTIFY EMAIL ---------------- #
+
+
+def send_admin_new_booking_email(
+    to_email,
+    organizer_name,
+    booking_kind,   # "Hall" or "Food"
+    hall_or_package,
+    from_date,
+    to_date,
+    extra_info="",
+):
+    """Notify admin when a new booking is created."""
+    subject = f"New {booking_kind} booking request - EventHub"
+
+    body = (
+        "Dear Admin,\n\n"
+        f"A new {booking_kind.upper()} booking has been created.\n\n"
+        f"Organizer: {organizer_name}\n"
+        f"{'Hall' if booking_kind == 'Hall' else 'Food Package'}: {hall_or_package}\n"
+        f"From: {from_date}\n"
+        f"To: {to_date}\n"
+        f"{extra_info}\n"
+        "Please review this booking in the admin panel and approve or reject it.\n\n"
+        "Regards,\n"
+        "EventHub System"
+    )
+
+    _send_raw_email(to_email, subject, body)

@@ -1,12 +1,12 @@
 {% extends "base.html" %}
-{% block title %}Organizer Login{% endblock %}
+{% block title %}User Login{% endblock %}
 
 {% block content %}
 <div class="row justify-content-center mt-5">
     <div class="col-md-6 col-lg-4">
         <div class="card shadow">
             <div class="card-body p-4">
-                <h3 class="text-center mb-4">Organizer Login</h3>
+                <h3 class="text-center mb-4">User Login</h3>
                 <form method="POST">
                     <div class="mb-3">
                         <label class="form-label">Email</label>
@@ -19,7 +19,7 @@
                     <button type="submit" class="btn btn-primary w-100 mb-3">Login</button>
                 </form>
                 <p class="text-center mb-0">
-                    New organizer?
+                    New user?
                     <a href="{{ url_for('auth.organizer_register') }}">Register here</a>
                 </p>
             </div>

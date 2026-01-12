@@ -6,31 +6,37 @@
     <div class="hero-overlay"></div>
 
     <div class="hero-content">
-        <h1 class="hero-title">Online Event Booking &amp; Management</h1>
+        <h1 class="hero-title">Online Event Booking &amp; Management System</h1>
         <p class="hero-subtitle">
             Book event halls and manage food packages with dedicated admin and organizer modules.
         </p>
 
-        <div class="row justify-content-center hero-buttons g-3">
-            <div class="col-md-3">
-                <a href="{{ url_for('index') }}"
-                   class="btn btn-outline-light btn-lg w-100 hero-btn">
-                    Home
-                </a>
-            </div>
-            <div class="col-md-3">
-                <a href="{{ url_for('auth.admin_login') }}"
-                   class="btn btn-warning btn-lg w-100 hero-btn">
-                    Admin
-                </a>
-            </div>
-            <div class="col-md-3">
-                <a href="{{ url_for('auth.organizer_login') }}"
-                   class="btn btn-success btn-lg w-100 hero-btn">
-                    Organizer
-                </a>
-            </div>
-        </div>
+<div class="row justify-content-center hero-buttons g-3">
+    <!-- Book Event -->
+    <div class="col-md-3">
+        <a href="{{ url_for('auth.organizer_login', next='event') }}"
+           class="btn btn-success btn-lg w-100 hero-btn">
+            Book Event
+        </a>
+    </div>
+
+    <!-- Book Hall -->
+    <div class="col-md-3">
+        <a href="{{ url_for('auth.organizer_login', next='hall') }}"
+           class="btn btn-outline-light btn-lg w-100 hero-btn">
+            Book Hall
+        </a>
+    </div>
+
+    <!-- Book Food -->
+    <div class="col-md-3">
+        <a href="{{ url_for('auth.organizer_login', next='food') }}"
+           class="btn btn-outline-light btn-lg w-100 hero-btn">
+            Book Food
+        </a>
+    </div>
+</div>
+
     </div>
 </div>
 {% endblock %}
