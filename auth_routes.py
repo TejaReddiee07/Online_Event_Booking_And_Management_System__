@@ -61,6 +61,7 @@ def organizer_login():
         if org and verify_password(org['password'], password):
             session['user_id'] = str(org['_id'])
             session['role'] = 'organizer'
+            session['entry_mode'] = next_action  # NEW: remember how user entered
             flash('user login successful')
 
             # redirect based on what user clicked on home page
