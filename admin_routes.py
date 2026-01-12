@@ -269,7 +269,6 @@ def food_bookings():
     return render_template('admin/bookings.html', bookings=bookings)
 
 
-
 # ---------------- HALL + FOOD BOOKINGS ----------------
 @admin_bp.route('/hall-food-bookings')
 @login_required
@@ -385,5 +384,79 @@ def approve(booking_id):
             flash(f'Booking approved but email failed: {e}', 'warning')
     else:
         flash('Booking approved!', 'success')
+
+    return redirect(url_for('admin.bookings'))
+
+@admin_bp.route('/reject/<booking_id>')
+@login_required
+def reject(booking_id):
+    require_admin(session.get('role'))
+
+    # Try hall / hall+food booking first
+    booking = mongo.db.bookings.find_one({'_id': ObjectId(booking_id)})
+    if booking:
+        mongo.db.bookings.update_one(
+            {'_id': booking['_id']},
+            {'$set': {'status': 'rejected'}}
+        )
+
+        # If linked food booking, mark that as rejected too
+        if booking.get('linked_food_booking'):
+            mongo.db.food_bookings.update_one(
+                {'_id': booking['linked_food_booking']},
+                {'$set': {'status': 'rejected'}}
+            )
+
+        organizer = mongo.db.organizers.find_one({'_id': booking['org_id']})
+        hall = mongo.db.halls.find_one({'_id': booking['hall_id']}) if booking.get('hall_id') else None
+
+        if organizer and organizer.get('email') and hall:
+            try:
+                from utils_email import send_booking_rejected_email
+                send_booking_rejected_email(
+                    to_email=organizer['email'],
+                    hall_name=hall.get('title', 'your hall'),
+                    from_date=booking.get('from_date', ''),
+                    to_date=booking.get('to_date', ''),
+                    reason="Booking rejected by admin.",
+                )
+                flash('Booking rejected and user notified by email.', 'success')
+            except Exception as e:
+                current_app.logger.exception("Reject email failed")
+                flash(f'Booking rejected but email failed: {e}', 'warning')
+        else:
+            flash('Booking rejected.', 'success')
+
+        return redirect(url_for('admin.bookings'))
+
+    # If not found in hall bookings, treat as food-only booking
+    food_booking = mongo.db.food_bookings.find_one({'_id': ObjectId(booking_id)})
+    if food_booking:
+        mongo.db.food_bookings.update_one(
+            {'_id': food_booking['_id']},
+            {'$set': {'status': 'rejected'}}
+        )
+
+        organizer = mongo.db.organizers.find_one({'_id': food_booking['org_id']})
+        pkg = mongo.db.food_packages.find_one({'_id': food_booking['package_id']})
+
+        if organizer and organizer.get('email') and pkg:
+            try:
+                from utils_email import send_food_booking_rejected_email
+                send_food_booking_rejected_email(
+                    to_email=organizer['email'],
+                    package_name=pkg.get('name', 'Food package'),
+                    event_date=food_booking.get('from_date', '-'),
+                    reason="Food booking rejected by admin.",
+                )
+                flash('Food booking rejected and user notified by email.', 'success')
+            except Exception as e:
+                current_app.logger.exception("Food reject email failed")
+                flash(f'Food booking rejected but email failed: {e}', 'warning')
+        else:
+            flash('Food booking rejected.', 'success')
+
+    else:
+        flash('Booking not found.', 'danger')
 
     return redirect(url_for('admin.bookings'))
