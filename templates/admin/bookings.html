@@ -69,14 +69,29 @@
                                 <td>{{ booking.organizer_name }}</td>
                                 <td>{{ booking.hall_name }}</td>
                                 <td>{{ booking.event_name or 'N/A' }}</td>
-                                <td>{{ booking.from_date }}</td>
-                                <td>{{ booking.to_date }}</td>
+
+                                {# Dates: single date for Food Only when from == to #}
+                                <td>
+                                    {% if booking.combined_type == 'Food Only' and booking.from_date == booking.to_date %}
+                                        {{ booking.from_date }}
+                                    {% else %}
+                                        {{ booking.from_date }}
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if booking.combined_type == 'Food Only' and booking.from_date == booking.to_date %}
+                                        -
+                                    {% else %}
+                                        {{ booking.to_date }}
+                                    {% endif %}
+                                </td>
+
                                 <td>{{ booking.num_people or '-' }}</td>
 
-                                {# same as old Total column, just renamed to Hall Total #}
+                                {# Hall amount (same as old Total column, just renamed) #}
                                 <td>₹{{ booking.total_price }}</td>
 
-                                {# new: food plates #}
+                                {# Food plates #}
                                 <td>
                                     {% if booking.combined_type == 'Hall + Food' or booking.combined_type == 'Food Only' %}
                                         {{ booking.food_plates or '-' }}
@@ -85,7 +100,7 @@
                                     {% endif %}
                                 </td>
 
-                                {# new: food total #}
+                                {# Food total #}
                                 <td>
                                     {% if booking.combined_type == 'Hall + Food' or booking.combined_type == 'Food Only' %}
                                         ₹{{ booking.food_total or 0 }}
