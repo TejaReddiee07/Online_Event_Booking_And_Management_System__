@@ -116,16 +116,21 @@
                                         {{ status.upper() }}
                                     </span>
                                 </td>
-                                <td>
-                                    {% if booking.get('status', 'pending') == 'pending' %}
-                                    <a href="{{ url_for('admin.approve', booking_id=booking._id) }}"
-                                       class="btn btn-sm btn-success">
-                                        Approve
-                                    </a>
-                                    {% else %}
-                                    <span class="text-success">✓ Approved</span>
-                                    {% endif %}
-                                </td>
+                                <td class="d-flex gap-1">
+    {% if booking.get('status', 'pending') == 'pending' %}
+        <a href="{{ url_for('admin.approve', booking_id=booking._id) }}"
+           class="btn btn-sm btn-success">
+            Approve
+        </a>
+        <a href="{{ url_for('admin.reject', booking_id=booking._id) }}"
+           class="btn btn-sm btn-danger">
+            Reject
+        </a>
+    {% else %}
+        <span class="text-success">✓ {{ booking.status|upper }}</span>
+    {% endif %}
+</td>
+
                             </tr>
                             {% endfor %}
                         </tbody>
