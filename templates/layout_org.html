@@ -11,11 +11,42 @@
                 <div class="card-body p-3">
                     <h5 class="mb-3">User Panel</h5>
                     <div class="list-group">
-                        <a href="{{ url_for('organizer.dashboard') }}" class="list-group-item">Dashboard</a>
-                        <a href="{{ url_for('organizer.halls_list') }}" class="list-group-item">Event Halls</a>
-                        <a href="{{ url_for('organizer.food_packages') }}" class="list-group-item">Food Packages</a>
-                        <a href="{{ url_for('organizer.bookings') }}" class="list-group-item">My Bookings</a>
-                        <a href="{{ url_for('logout') }}" class="list-group-item text-danger">Logout</a>
+                        {% set mode = session.get('entry_mode', 'event') %}
+
+                        {# Book Event: Halls + Food + My Bookings #}
+                        {% if mode == 'event' %}
+                            <a href="{{ url_for('organizer.halls_list') }}" class="list-group-item">
+                                Event Halls
+                            </a>
+                            <a href="{{ url_for('organizer.food_packages') }}" class="list-group-item">
+                                Food Packages
+                            </a>
+                            <a href="{{ url_for('organizer.bookings') }}" class="list-group-item">
+                                My Bookings
+                            </a>
+
+                        {# Book Hall: Halls + My Bookings only #}
+                        {% elif mode == 'hall' %}
+                            <a href="{{ url_for('organizer.halls_list') }}" class="list-group-item">
+                                Event Halls
+                            </a>
+                            <a href="{{ url_for('organizer.bookings') }}" class="list-group-item">
+                                My Bookings
+                            </a>
+
+                        {# Book Food: Food Packages + My Bookings only #}
+                        {% elif mode == 'food' %}
+                            <a href="{{ url_for('organizer.food_packages') }}" class="list-group-item">
+                                Food Packages
+                            </a>
+                            <a href="{{ url_for('organizer.bookings') }}" class="list-group-item">
+                                My Bookings
+                            </a>
+                        {% endif %}
+
+                        <a href="{{ url_for('logout') }}" class="list-group-item text-danger">
+                            Logout
+                        </a>
                     </div>
                 </div>
             </div>
