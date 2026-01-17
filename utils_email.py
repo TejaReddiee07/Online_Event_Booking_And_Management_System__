@@ -3,6 +3,7 @@ from email.mime.text import MIMEText
 from config import Config
 
 
+
 def _send_raw_email(to_email: str, subject: str, body: str):
     """Low-level email sender with proper TLS and error handling."""
     msg = MIMEText(body, _subtype="plain", _charset="utf-8")
@@ -21,7 +22,9 @@ def _send_raw_email(to_email: str, subject: str, body: str):
         server.send_message(msg)
 
 
+
 # ---------------- APPROVAL EMAILS ---------------- #
+
 
 
 def send_booking_confirm_email(
@@ -38,17 +41,21 @@ def send_booking_confirm_email(
         f"{hall_address.replace(' ', '+')}"
     )
     body = (
-        "Dear Organizer,\n\n"
+        "Dear User,\n\n"
         "Your booking has been APPROVED!\n\n"
         f"Hall: {hall_name}\n"
         f"Address: {hall_address}\n"
         f"Google Maps: {maps_link}\n"
         f"Dates: {from_date} to {to_date}\n"
         f"Total Price: ₹{total_price}\n\n"
+        "💳 For Payment, please contact:\n"
+        "📧 Email: nagatejareddygoli@gmail.com\n"
+        "📞 Phone: 7994693055\n\n"
         "Regards,\n"
         "EventHub Team"
     )
     _send_raw_email(to_email, subject, body)
+
 
 
 def send_booking_confirm_email_with_food(
@@ -65,10 +72,8 @@ def send_booking_confirm_email_with_food(
 ):
     subject = "Your booking is confirmed - EventHub"
 
-    # payment_link is no longer included in the email body
-
     body = (
-        "Dear Organizer,\n\n"
+        "Dear User,\n\n"
         "✅ Your booking has been APPROVED!\n\n"
         f"🏛️ Hall: {hall_name}\n"
         f"📍 Location: {hall_location}\n"
@@ -77,7 +82,9 @@ def send_booking_confirm_email_with_food(
         f"{food_details}\n"
         "━━━━━━━━━━━━━━━━━━━━━━\n"
         f"💳 TOTAL AMOUNT: ₹{total_amount}\n\n"
-        "For completing the payment, please contact the admin.\n\n"
+        "👇 For completing the payment, please contact:\n"
+        "📧 **Email**: nagatejareddygoli@gmail.com\n"
+        "📞 **Phone**: 7994693055\n\n"
         "Thank you for using EventHub!\n"
         "Team EventHub"
     )
@@ -85,7 +92,9 @@ def send_booking_confirm_email_with_food(
     _send_raw_email(to_email, subject, body)
 
 
+
 # ---------------- REJECTION EMAILS ---------------- #
+
 
 
 def send_booking_rejected_email(
@@ -100,7 +109,7 @@ def send_booking_rejected_email(
 
     reason_text = f"Reason: {reason}\n\n" if reason else ""
     body = (
-        "Dear Organizer,\n\n"
+        "Dear User,\n\n"
         "Your booking has been REJECTED by the admin.\n\n"
         f"Hall: {hall_name}\n"
         f"Dates: {from_date} to {to_date}\n"
@@ -110,6 +119,7 @@ def send_booking_rejected_email(
         "EventHub Team"
     )
     _send_raw_email(to_email, subject, body)
+
 
 
 def send_food_booking_rejected_email(
@@ -123,7 +133,7 @@ def send_food_booking_rejected_email(
 
     reason_text = f"Reason: {reason}\n\n" if reason else ""
     body = (
-        "Dear Organizer,\n\n"
+        "Dear User,\n\n"
         "Your food booking has been REJECTED by the admin.\n\n"
         f"Food Package: {package_name}\n"
         f"Event Date: {event_date}\n"
@@ -133,6 +143,7 @@ def send_food_booking_rejected_email(
         "EventHub Team"
     )
     _send_raw_email(to_email, subject, body)
+
 
 
 def send_booking_auto_rejected_unavailable_email(
@@ -145,7 +156,7 @@ def send_booking_auto_rejected_unavailable_email(
     subject = "Hall not available for selected dates - EventHub"
 
     body = (
-        "Dear Organizer,\n\n"
+        "Dear User,\n\n"
         "Your booking request has been REJECTED automatically because the hall "
         "is already booked for the selected date(s).\n\n"
         f"Hall: {hall_name}\n"
@@ -159,7 +170,9 @@ def send_booking_auto_rejected_unavailable_email(
     _send_raw_email(to_email, subject, body)
 
 
+
 # ---------------- ADMIN NOTIFY EMAIL ---------------- #
+
 
 
 def send_admin_new_booking_email(
@@ -177,7 +190,7 @@ def send_admin_new_booking_email(
     body = (
         "Dear Admin,\n\n"
         f"A new {booking_kind.upper()} booking has been created.\n\n"
-        f"Organizer: {organizer_name}\n"
+        f"User: {organizer_name}\n"
         f"{'Hall' if booking_kind == 'Hall' else 'Food Package'}: {hall_or_package}\n"
         f"From: {from_date}\n"
         f"To: {to_date}\n"
