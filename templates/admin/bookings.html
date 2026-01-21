@@ -31,6 +31,9 @@
             <a href="{{ url_for('admin.hall_food_bookings') }}" class="list-group-item list-group-item-action">
                 Event Bookings
             </a>
+            <a href="{{ url_for('admin.admins_list') }}" class="list-group-item list-group-item-action">
+                Admins
+            </a>
             <a href="{{ url_for('logout') }}" class="list-group-item list-group-item-action text-danger">
                 Logout
             </a>
@@ -117,7 +120,6 @@
                                     </span>
                                 </td>
                                 <td class="d-flex gap-1">
-<<<<<<< HEAD
                                     {% if booking.get('status', 'pending') == 'pending' %}
                                         <a href="{{ url_for('admin.approve', booking_id=booking._id) }}"
                                            class="btn btn-sm btn-success">
@@ -127,31 +129,10 @@
                                            class="btn btn-sm btn-danger">
                                             Reject
                                         </a>
-                                        <a href="{{ url_for('admin.admins_list') }}"
-   class="list-group-item list-group-item-action">
-    Admins
-</a>
-
                                     {% else %}
                                         <span class="text-success">✓ {{ booking.status|upper }}</span>
                                     {% endif %}
                                 </td>
-=======
-    {% if booking.get('status', 'pending') == 'pending' %}
-        <a href="{{ url_for('admin.approve', booking_id=booking._id) }}"
-           class="btn btn-sm btn-success">
-            Approve
-        </a>
-        <a href="{{ url_for('admin.reject', booking_id=booking._id) }}"
-           class="btn btn-sm btn-danger">
-            Reject
-        </a>
-    {% else %}
-        <span class="text-success">✓ {{ booking.status|upper }}</span>
-    {% endif %}
-</td>
-
->>>>>>> 9526daa4a4bae6cc394d967bb21c46d365c19ec4
                             </tr>
                             {% endfor %}
                         </tbody>
