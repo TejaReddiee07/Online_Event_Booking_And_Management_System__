@@ -35,7 +35,7 @@ deactivate () {
 # unset irrelevant variables
 deactivate nondestructive
 
-VIRTUAL_ENV="C:\Users\nagat\OneDrive\Desktop\event booking system\venv"
+VIRTUAL_ENV="C:\Users\nagat\OneDrive\Desktop\Online_Event_Booking\venv"
 export VIRTUAL_ENV
 
 _OLD_VIRTUAL_PATH="$PATH"

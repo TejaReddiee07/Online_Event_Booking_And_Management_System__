@@ -29,7 +29,7 @@
                 Food Bookings
             </a>
             <a href="{{ url_for('admin.hall_food_bookings') }}" class="list-group-item list-group-item-action">
-                Hall + Food Bookings
+                Event Bookings
             </a>
             <a href="{{ url_for('logout') }}" class="list-group-item list-group-item-action text-danger">
                 Logout
@@ -69,25 +69,40 @@
                                 <td>{{ booking.organizer_name }}</td>
                                 <td>{{ booking.hall_name }}</td>
                                 <td>{{ booking.event_name or 'N/A' }}</td>
-                                <td>{{ booking.from_date }}</td>
-                                <td>{{ booking.to_date }}</td>
+
+                                {# Dates: single date for Food Only when from == to #}
+                                <td>
+                                    {% if booking.combined_type == 'Food Only' and booking.from_date == booking.to_date %}
+                                        {{ booking.from_date }}
+                                    {% else %}
+                                        {{ booking.from_date }}
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if booking.combined_type == 'Food Only' and booking.from_date == booking.to_date %}
+                                        -
+                                    {% else %}
+                                        {{ booking.to_date }}
+                                    {% endif %}
+                                </td>
+
                                 <td>{{ booking.num_people or '-' }}</td>
 
-                                {# same as old Total column, just renamed to Hall Total #}
+                                {# Hall amount (same as old Total column, just renamed) #}
                                 <td>₹{{ booking.total_price }}</td>
 
-                                {# new: food plates #}
+                                {# Food plates #}
                                 <td>
-                                    {% if booking.combined_type == 'Hall + Food' or booking.combined_type == 'Food Only' %}
+                                    {% if booking.combined_type == 'Event' or booking.combined_type == 'Food Only' %}
                                         {{ booking.food_plates or '-' }}
                                     {% else %}
                                         -
                                     {% endif %}
                                 </td>
 
-                                {# new: food total #}
+                                {# Food total #}
                                 <td>
-                                    {% if booking.combined_type == 'Hall + Food' or booking.combined_type == 'Food Only' %}
+                                    {% if booking.combined_type == 'Event' or booking.combined_type == 'Food Only' %}
                                         ₹{{ booking.food_total or 0 }}
                                     {% else %}
                                         -
@@ -101,14 +116,23 @@
                                         {{ status.upper() }}
                                     </span>
                                 </td>
-                                <td>
+                                <td class="d-flex gap-1">
                                     {% if booking.get('status', 'pending') == 'pending' %}
-                                    <a href="{{ url_for('admin.approve', booking_id=booking._id) }}"
-                                       class="btn btn-sm btn-success">
-                                        Approve
-                                    </a>
+                                        <a href="{{ url_for('admin.approve', booking_id=booking._id) }}"
+                                           class="btn btn-sm btn-success">
+                                            Approve
+                                        </a>
+                                        <a href="{{ url_for('admin.reject', booking_id=booking._id) }}"
+                                           class="btn btn-sm btn-danger">
+                                            Reject
+                                        </a>
+                                        <a href="{{ url_for('admin.admins_list') }}"
+   class="list-group-item list-group-item-action">
+    Admins
+</a>
+
                                     {% else %}
-                                    <span class="text-success">✓ Approved</span>
+                                        <span class="text-success">✓ {{ booking.status|upper }}</span>
                                     {% endif %}
                                 </td>
                             </tr>

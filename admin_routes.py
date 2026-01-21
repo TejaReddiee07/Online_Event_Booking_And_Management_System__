@@ -12,10 +12,15 @@ from utils_security import hash_password
 from utils_email import (
     send_booking_confirm_email,
     send_booking_confirm_email_with_food,
+    # NEW admin emails
+    send_admin_approved_email,
+    send_admin_rejected_email,
 )
 
-
 admin_bp = Blueprint('admin', __name__)
+
+# only this email can approve/reject admins
+SUPER_ADMIN_EMAIL = "nagatejareddygoli@gmail.com"
 
 
 @login_required
@@ -183,8 +188,8 @@ def bookings():
             booking['hall_name'] = 'N/A'
 
         if booking.get('linked_food_booking'):
-            booking['combined_type'] = 'Hall + Food'
-            # NEW: attach food price and plates for display
+            booking['combined_type'] = 'Event'   # was 'Hall + Food'
+            # attach food price and plates for display
             food_booking = mongo.db.food_bookings.find_one(
                 {'_id': booking['linked_food_booking']}
             )
@@ -255,12 +260,14 @@ def food_bookings():
         b['organizer_name'] = organizer['name'] if organizer else 'N/A'
         b['organizer_email'] = organizer.get('email', '') if organizer else ''
         b['hall_name'] = '-'      # no hall
-        b['from_date'] = '-'      # not applicable
-        b['to_date'] = '-'
+
+        # keep the dates from the food booking
+        b['from_date'] = b.get('from_date', '-')
+        b['to_date'] = b.get('to_date', '-')
+
         b['total_price'] = b.get('total_price', 0)
         b['combined_type'] = 'Food Only'
         b['_id'] = b['_id']
-        # NEW: for template display
         b['food_plates'] = b.get('plates', 0)
         b['food_total'] = b.get('total_price', 0)
 
@@ -293,9 +300,9 @@ def hall_food_bookings():
         else:
             booking['hall_name'] = 'N/A'
 
-        booking['combined_type'] = 'Hall + Food'
+        booking['combined_type'] = 'Event'   # was 'Hall + Food'
 
-        # NEW: attach food plates and price for this combined booking
+        # attach food plates and price for this combined booking
         food_booking = mongo.db.food_bookings.find_one(
             {'_id': booking['linked_food_booking']}
         )
@@ -384,3 +391,147 @@ def approve(booking_id):
         flash('Booking approved!', 'success')
 
     return redirect(url_for('admin.bookings'))
+
+
+@admin_bp.route('/reject/<booking_id>')
+@login_required
+def reject(booking_id):
+    require_admin(session.get('role'))
+
+    # Try hall / hall+food booking first
+    booking = mongo.db.bookings.find_one({'_id': ObjectId(booking_id)})
+    if booking:
+        mongo.db.bookings.update_one(
+            {'_id': booking['_id']},
+            {'$set': {'status': 'rejected'}}
+        )
+
+        # If linked food booking, mark that as rejected too
+        if booking.get('linked_food_booking'):
+            mongo.db.food_bookings.update_one(
+                {'_id': booking['linked_food_booking']},
+                {'$set': {'status': 'rejected'}}
+            )
+
+        organizer = mongo.db.organizers.find_one({'_id': booking['org_id']})
+        hall = mongo.db.halls.find_one({'_id': booking['hall_id']}) if booking.get('hall_id') else None
+
+        if organizer and organizer.get('email') and hall:
+            try:
+                from utils_email import send_booking_rejected_email
+                send_booking_rejected_email(
+                    to_email=organizer['email'],
+                    hall_name=hall.get('title', 'your hall'),
+                    from_date=booking.get('from_date', ''),
+                    to_date=booking.get('to_date', ''),
+                    reason="Booking rejected by admin.",
+                )
+                flash('Booking rejected and user notified by email.', 'success')
+            except Exception as e:
+                current_app.logger.exception("Reject email failed")
+                flash(f'Booking rejected but email failed: {e}', 'warning')
+        else:
+            flash('Booking rejected.', 'success')
+
+        return redirect(url_for('admin.bookings'))
+
+    # If not found in hall bookings, treat as food-only booking
+    food_booking = mongo.db.food_bookings.find_one({'_id': ObjectId(booking_id)})
+    if food_booking:
+        mongo.db.food_bookings.update_one(
+            {'_id': food_booking['_id']},
+            {'$set': {'status': 'rejected'}}
+        )
+
+        organizer = mongo.db.organizers.find_one({'_id': food_booking['org_id']})
+        pkg = mongo.db.food_packages.find_one({'_id': food_booking['package_id']})
+
+        if organizer and organizer.get('email') and pkg:
+            try:
+                from utils_email import send_food_booking_rejected_email
+                send_food_booking_rejected_email(
+                    to_email=organizer['email'],
+                    package_name=pkg.get('name', 'Food package'),
+                    event_date=food_booking.get('from_date', '-'),
+                    reason="Food booking rejected by admin.",
+                )
+                flash('Food booking rejected and user notified by email.', 'success')
+            except Exception as e:
+                current_app.logger.exception("Food reject email failed")
+                flash(f'Food booking rejected but email failed: {e}', 'warning')
+        else:
+            flash('Food booking rejected.', 'success')
+
+    else:
+        flash('Booking not found.', 'danger')
+
+    return redirect(url_for('admin.bookings'))
+
+
+# ---------------- ADMIN MANAGEMENT (NEW) ----------------
+@admin_bp.route('/admins', methods=['GET'])
+@login_required
+def admins_list():
+    require_admin(session.get('role'))
+    admins = list(mongo.db.admins.find())
+    return render_template('admin/admins.html', admins=admins)
+
+
+@admin_bp.route('/admins/approve/<admin_id>', methods=['POST'])
+@login_required
+def approve_admin(admin_id):
+    require_admin(session.get('role'))
+
+    # only super admin can approve
+    if session.get('username') != SUPER_ADMIN_EMAIL:
+        flash('You are not allowed to approve admins.', 'danger')
+        return redirect(url_for('admin.admins_list'))
+
+    admin_doc = mongo.db.admins.find_one({'_id': ObjectId(admin_id)})
+    if not admin_doc:
+        flash('Admin not found.', 'danger')
+        return redirect(url_for('admin.admins_list'))
+
+    mongo.db.admins.update_one(
+        {'_id': admin_doc['_id']},
+        {'$set': {'status': 'approved'}}
+    )
+
+    try:
+        if admin_doc.get('username'):
+            send_admin_approved_email(admin_doc['username'])
+    except Exception:
+        pass
+
+    flash('Admin approved.', 'success')
+    return redirect(url_for('admin.admins_list'))
+
+
+@admin_bp.route('/admins/reject/<admin_id>', methods=['POST'])
+@login_required
+def reject_admin(admin_id):
+    require_admin(session.get('role'))
+
+    # only super admin can reject
+    if session.get('username') != SUPER_ADMIN_EMAIL:
+        flash('You are not allowed to reject admins.', 'danger')
+        return redirect(url_for('admin.admins_list'))
+
+    admin_doc = mongo.db.admins.find_one({'_id': ObjectId(admin_id)})
+    if not admin_doc:
+        flash('Admin not found.', 'danger')
+        return redirect(url_for('admin.admins_list'))
+
+    mongo.db.admins.update_one(
+        {'_id': admin_doc['_id']},
+        {'$set': {'status': 'rejected'}}
+    )
+
+    try:
+        if admin_doc.get('username'):
+            send_admin_rejected_email(admin_doc['username'])
+    except Exception:
+        pass
+
+    flash('Admin rejected.', 'success')
+    return redirect(url_for('admin.admins_list'))

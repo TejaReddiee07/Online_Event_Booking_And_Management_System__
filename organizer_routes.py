@@ -68,11 +68,28 @@ def book_hall(hall_id):
         return redirect(url_for('organizer.halls_list'))
 
     if request.method == 'POST':
+        from_date = request.form['from_date']
+        to_date = request.form['to_date']
+
+        # auto‑reject if same hall already booked for overlapping dates
+        conflict = mongo.db.bookings.find_one({
+            'hall_id': hall['_id'],
+            'status': {'$ne': 'rejected'},  # approved or pending block new booking
+            '$or': [{
+                'from_date': {'$lte': to_date},
+                'to_date': {'$gte': from_date},
+            }],
+        })
+
+        if conflict:
+            flash('This hall is already booked for the selected dates. Please choose another date or hall.', 'danger')
+            return redirect(url_for('organizer.halls_list'))
+
         data = {
             'org_id': ObjectId(session['user_id']),
             'hall_id': hall['_id'],
-            'from_date': request.form['from_date'],
-            'to_date': request.form['to_date'],
+            'from_date': from_date,
+            'to_date': to_date,
             'num_people': int(request.form['num_people']),
             'event_name': request.form['event_name'],
             'description': request.form.get('description', ''),
@@ -100,10 +117,18 @@ def book_hall(hall_id):
                 extra_info=extra,
             )
 
-        # Save booking_id in session and redirect to food
-        session['hall_booking_id'] = str(booking_id)
-        flash('Hall booking submitted! Now select food package.', 'success')
-        return redirect(url_for('organizer.food_packages'))
+        # Decide where to go next based on how user entered (event / hall / food)
+        entry_mode = session.get('entry_mode', 'event')
+
+        if entry_mode == 'event':
+            # Full event flow: hall then food
+            session['hall_booking_id'] = str(booking_id)
+            flash('Hall booking submitted! Now select food package.', 'success')
+            return redirect(url_for('organizer.food_packages'))
+        else:
+            # Book Hall only: do not redirect to food
+            flash('Hall booking submitted!', 'success')
+            return redirect(url_for('organizer.bookings'))
 
     return render_template('organizer/book_hall.html', hall=hall)
 
@@ -133,7 +158,7 @@ def book_food(package_id):
         plates = int(request.form.get('plates') or 0)
         total_price = float(request.form.get('total_price') or 0)
 
-        # NEW: read from/to dates from form
+        # read from/to dates from form
         from_date = request.form.get('from_date')
         to_date = request.form.get('to_date')
 

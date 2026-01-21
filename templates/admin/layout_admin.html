@@ -1,0 +1,46 @@
+{# templates/admin/layout_admin.html #}
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-3 col-lg-2 mb-4">
+        <div class="list-group">
+            <a href="{{ url_for('admin.dashboard') }}" class="list-group-item list-group-item-action">
+                Dashboard
+            </a>
+            <a href="{{ url_for('admin.organizers') }}" class="list-group-item list-group-item-action">
+                Organizers
+            </a>
+            <a href="{{ url_for('admin.halls') }}" class="list-group-item list-group-item-action">
+                Event Halls
+            </a>
+            <a href="{{ url_for('admin.food_packages') }}" class="list-group-item list-group-item-action">
+                Food Packages
+            </a>
+            <a href="{{ url_for('admin.bookings') }}" class="list-group-item list-group-item-action">
+                All Bookings
+            </a>
+            <a href="{{ url_for('admin.hall_bookings') }}" class="list-group-item list-group-item-action">
+                Hall Bookings
+            </a>
+            <a href="{{ url_for('admin.food_bookings') }}" class="list-group-item list-group-item-action">
+                Food Bookings
+            </a>
+            <a href="{{ url_for('admin.hall_food_bookings') }}" class="list-group-item list-group-item-action">
+                Event Bookings
+            </a>
+            <a href="{{ url_for('admin.admins_list') }}" class="list-group-item list-group-item-action">
+                Admins
+            </a>
+            <a href="{{ url_for('logout') }}" class="list-group-item list-group-item-action text-danger">
+                Logout
+            </a>
+        </div>
+    </div>
+
+    <div class="col-md-9 col-lg-10">
+        <h2 class="mb-4">{% block admin_title %}{% endblock %}</h2>
+        {% block admin_content %}{% endblock %}
+    </div>
+</div>
+{% endblock %}

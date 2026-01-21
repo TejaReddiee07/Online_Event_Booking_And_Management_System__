@@ -1,0 +1,43 @@
+{% extends "admin/layout_admin.html" %}
+
+{% block admin_title %}Admins{% endblock %}
+
+{% block admin_content %}
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Username</th>
+            <th>Status</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for a in admins %}
+        <tr>
+            <td>{{ a.username }}</td>
+            <td>{{ a.status or 'approved' }}</td>
+            <td>
+                {% if session.get('username') == 'nagatejareddygoli@gmail.com' %}
+                    {% if a.status != 'approved' %}
+                    <form method="post"
+                          action="{{ url_for('admin.approve_admin', admin_id=a._id) }}"
+                          style="display:inline;">
+                        <button type="submit" class="btn btn-success btn-sm">Approve</button>
+                    </form>
+                    {% endif %}
+                    {% if a.status != 'rejected' %}
+                    <form method="post"
+                          action="{{ url_for('admin.reject_admin', admin_id=a._id) }}"
+                          style="display:inline;">
+                        <button type="submit" class="btn btn-danger btn-sm">Reject</button>
+                    </form>
+                    {% endif %}
+                {% else %}
+                    <span class="text-muted">No permission</span>
+                {% endif %}
+            </td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

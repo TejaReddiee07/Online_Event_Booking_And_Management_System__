@@ -38,13 +38,16 @@ def send_booking_confirm_email(
         f"{hall_address.replace(' ', '+')}"
     )
     body = (
-        "Dear Organizer,\n\n"
+        "Dear User,\n\n"
         "Your booking has been APPROVED!\n\n"
         f"Hall: {hall_name}\n"
         f"Address: {hall_address}\n"
         f"Google Maps: {maps_link}\n"
         f"Dates: {from_date} to {to_date}\n"
         f"Total Price: ₹{total_price}\n\n"
+        "💳 For Payment, please contact:\n"
+        "📧 Email: nagatejareddygoli@gmail.com\n"
+        "📞 Phone: 7994693055\n\n"
         "Regards,\n"
         "EventHub Team"
     )
@@ -65,10 +68,8 @@ def send_booking_confirm_email_with_food(
 ):
     subject = "Your booking is confirmed - EventHub"
 
-    # payment_link is no longer included in the email body
-
     body = (
-        "Dear Organizer,\n\n"
+        "Dear User,\n\n"
         "✅ Your booking has been APPROVED!\n\n"
         f"🏛️ Hall: {hall_name}\n"
         f"📍 Location: {hall_location}\n"
@@ -77,7 +78,9 @@ def send_booking_confirm_email_with_food(
         f"{food_details}\n"
         "━━━━━━━━━━━━━━━━━━━━━━\n"
         f"💳 TOTAL AMOUNT: ₹{total_amount}\n\n"
-        "For completing the payment, please contact the admin.\n\n"
+        "👇 For completing the payment, please contact:\n"
+        "📧 **Email**: nagatejareddygoli@gmail.com\n"
+        "📞 **Phone**: 7994693055\n\n"
         "Thank you for using EventHub!\n"
         "Team EventHub"
     )
@@ -100,7 +103,7 @@ def send_booking_rejected_email(
 
     reason_text = f"Reason: {reason}\n\n" if reason else ""
     body = (
-        "Dear Organizer,\n\n"
+        "Dear User,\n\n"
         "Your booking has been REJECTED by the admin.\n\n"
         f"Hall: {hall_name}\n"
         f"Dates: {from_date} to {to_date}\n"
@@ -123,7 +126,7 @@ def send_food_booking_rejected_email(
 
     reason_text = f"Reason: {reason}\n\n" if reason else ""
     body = (
-        "Dear Organizer,\n\n"
+        "Dear User,\n\n"
         "Your food booking has been REJECTED by the admin.\n\n"
         f"Food Package: {package_name}\n"
         f"Event Date: {event_date}\n"
@@ -145,7 +148,7 @@ def send_booking_auto_rejected_unavailable_email(
     subject = "Hall not available for selected dates - EventHub"
 
     body = (
-        "Dear Organizer,\n\n"
+        "Dear User,\n\n"
         "Your booking request has been REJECTED automatically because the hall "
         "is already booked for the selected date(s).\n\n"
         f"Hall: {hall_name}\n"
@@ -177,7 +180,7 @@ def send_admin_new_booking_email(
     body = (
         "Dear Admin,\n\n"
         f"A new {booking_kind.upper()} booking has been created.\n\n"
-        f"Organizer: {organizer_name}\n"
+        f"User: {organizer_name}\n"
         f"{'Hall' if booking_kind == 'Hall' else 'Food Package'}: {hall_or_package}\n"
         f"From: {from_date}\n"
         f"To: {to_date}\n"
@@ -187,4 +190,88 @@ def send_admin_new_booking_email(
         "EventHub System"
     )
 
+    _send_raw_email(to_email, subject, body)
+
+
+# ---------------- ADMIN REGISTRATION EMAILS ---------------- #
+
+def send_admin_new_admin_request_email(to_email: str, new_admin_username: str):
+    """Email to main admin when a new admin registers."""
+    subject = "New admin registration request - EventHub"
+    body = (
+        "Dear Admin,\n\n"
+        f"A new admin has registered with username: {new_admin_username}.\n"
+        "Please login to the Online Event Booking admin panel and approve or reject this admin.\n\n"
+        "Regards,\n"
+        "EventHub System"
+    )
+    _send_raw_email(to_email, subject, body)
+
+
+def send_admin_registration_pending_email(to_email: str):
+    """Email to new admin: registration pending."""
+    subject = "Your admin registration is pending approval - EventHub"
+    body = (
+        "Dear User,\n\n"
+        "Your admin registration has been received and sent to the existing admin for approval.\n"
+        "Please wait until your account is approved. You will receive another email after approval or rejection.\n\n"
+        "Regards,\n"
+        "EventHub Team"
+    )
+    _send_raw_email(to_email, subject, body)
+
+
+
+def send_admin_approved_email(to_email: str):
+    """Email to new admin when approved."""
+    subject = "You are approved as admin - EventHub"
+    body = (
+        "Dear User,\n\n"
+        "Your admin account has been APPROVED.\n"
+        "You can now login to the Online Event Booking admin panel and manage events.\n\n"
+        "Regards,\n"
+        "EventHub Team"
+    )
+    _send_raw_email(to_email, subject, body)
+
+
+def send_admin_rejected_email(to_email: str):
+    """Email to new admin when rejected."""
+    subject = "Your admin registration was rejected - EventHub"
+    body = (
+        "Dear User,\n\n"
+        "Your admin registration has been REJECTED by the existing admin.\n"
+        "You will not be able to login as admin. You can still use the platform as a normal organizer/user.\n\n"
+        "Regards,\n"
+        "EventHub Team"
+    )
+    _send_raw_email(to_email, subject, body)
+
+# ---------------- ADMIN REGISTRATION STATUS EMAILS ---------------- #
+
+def send_admin_approved_email(to_email: str):
+    """Email to new admin when approved."""
+    subject = "You are approved as admin - EventHub"
+    body = (
+        "Dear User,\n\n"
+        "Your admin account has been APPROVED by the main admin.\n"
+        "You can now login to the EventHub Admin panel and access all admin features.\n\n"
+        "Please go to the Admin login page and sign in with your credentials.\n\n"
+        "Regards,\n"
+        "EventHub Team"
+    )
+    _send_raw_email(to_email, subject, body)
+
+
+def send_admin_rejected_email(to_email: str):
+    """Email to new admin when rejected."""
+    subject = "Your admin registration was rejected - EventHub"
+    body = (
+        "Dear User,\n\n"
+        "Your admin registration has been REJECTED by the main admin.\n"
+        "You will not be able to login as admin, but you can still use EventHub as a normal user/organizer.\n\n"
+        "If you think this is a mistake, please contact the admin.\n\n"
+        "Regards,\n"
+        "EventHub Team"
+    )
     _send_raw_email(to_email, subject, body)

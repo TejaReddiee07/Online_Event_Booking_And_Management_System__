@@ -1,7 +1,11 @@
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash
+
 from extensions import mongo
 from utils_security import verify_password, hash_password
-
+from utils_email import (
+    send_admin_new_admin_request_email,
+    send_admin_registration_pending_email,
+)
 
 auth_bp = Blueprint('auth', __name__)
 
@@ -25,10 +29,17 @@ def admin_login():
 
         admin = mongo.db.admins.find_one({'username': username})
         if admin and verify_password(admin['password'], password):
+            # allow login ONLY if approved
+            if admin.get('status', 'approved') != 'approved':
+                flash('Your admin account is not approved yet.', 'danger')
+                return render_template('auth/admin_login.html')
+
             session['user_id'] = str(admin['_id'])
             session['role'] = 'admin'
+            session['username'] = admin['username']  # needed for super-admin checks
             flash('Admin login successful')
             return redirect(url_for('admin.dashboard'))
+
         flash('Invalid admin credentials')
     return render_template('auth/admin_login.html')
 
@@ -38,12 +49,53 @@ def admin_register():
     if request.method == 'POST':
         username = request.form['username']
         password = hash_password(request.form['password'])
+
+        # if username already exists, block
         if mongo.db.admins.find_one({'username': username}):
             flash('Admin username already exists')
-        else:
-            mongo.db.admins.insert_one({'username': username, 'password': password})
-            flash('Admin registered. Please login.')
+            return render_template('auth/admin_register.html')
+
+        # check if there is already a main admin
+        existing_admin = mongo.db.admins.find_one({})
+
+        if not existing_admin:
+            # no admin exists yet -> first admin is main admin, auto-approved
+            mongo.db.admins.insert_one({
+                'username': username,
+                'password': password,
+                'status': 'approved',
+            })
+            flash('First admin registered. Please login.')
             return redirect(url_for('auth.admin_login'))
+
+        # some admin already exists -> this is a NEW admin request (pending)
+        new_admin_doc = {
+            'username': username,
+            'password': password,
+            'status': 'pending',
+        }
+        mongo.db.admins.insert_one(new_admin_doc)
+
+        # email the existing main admin (assume username is email)
+        if existing_admin.get('username'):
+            try:
+                send_admin_new_admin_request_email(
+                    to_email=existing_admin['username'],
+                    new_admin_username=username,
+                )
+            except Exception:
+                # do not break flow on email failure
+                pass
+
+        # email the new admin about pending status
+        try:
+            send_admin_registration_pending_email(to_email=username)
+        except Exception:
+            pass
+
+        flash('Admin registration sent to the main admin for approval.', 'info')
+        return redirect(url_for('auth.admin_login'))
+
     return render_template('auth/admin_register.html')
 
 
@@ -61,6 +113,7 @@ def organizer_login():
         if org and verify_password(org['password'], password):
             session['user_id'] = str(org['_id'])
             session['role'] = 'organizer'
+            session['entry_mode'] = next_action  # remember how user entered
             flash('user login successful')
 
             # redirect based on what user clicked on home page
