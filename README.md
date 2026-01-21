@@ -4,4 +4,4 @@ cd Online_Event_Booking
 
 pip install -r requirements.txt
 
-python app.py
+python app.pp
