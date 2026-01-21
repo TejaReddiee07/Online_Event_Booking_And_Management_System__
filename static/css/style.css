@@ -171,7 +171,7 @@ body {
 .hero-section {
     width: 100vw;
     height: calc(100vh - 56px);
-    background-image: url("../css/background image.png");
+    background-image: url("/static/css/background-image.png");
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
