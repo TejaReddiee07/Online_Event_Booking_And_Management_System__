@@ -392,7 +392,10 @@ def approve(booking_id):
 
     return redirect(url_for('admin.bookings'))
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> 9526daa4a4bae6cc394d967bb21c46d365c19ec4
 @admin_bp.route('/reject/<booking_id>')
 @login_required
 def reject(booking_id):
@@ -466,6 +469,7 @@ def reject(booking_id):
         flash('Booking not found.', 'danger')
 
     return redirect(url_for('admin.bookings'))
+<<<<<<< HEAD
 
 
 # ---------------- ADMIN MANAGEMENT (NEW) ----------------
@@ -535,3 +539,5 @@ def reject_admin(admin_id):
 
     flash('Admin rejected.', 'success')
     return redirect(url_for('admin.admins_list'))
+=======
+>>>>>>> 9526daa4a4bae6cc394d967bb21c46d365c19ec4

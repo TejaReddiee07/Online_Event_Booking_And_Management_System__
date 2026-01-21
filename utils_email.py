@@ -3,6 +3,7 @@ from email.mime.text import MIMEText
 from config import Config
 
 
+
 def _send_raw_email(to_email: str, subject: str, body: str):
     """Low-level email sender with proper TLS and error handling."""
     msg = MIMEText(body, _subtype="plain", _charset="utf-8")
@@ -21,7 +22,9 @@ def _send_raw_email(to_email: str, subject: str, body: str):
         server.send_message(msg)
 
 
+
 # ---------------- APPROVAL EMAILS ---------------- #
+
 
 
 def send_booking_confirm_email(
@@ -52,6 +55,7 @@ def send_booking_confirm_email(
         "EventHub Team"
     )
     _send_raw_email(to_email, subject, body)
+
 
 
 def send_booking_confirm_email_with_food(
@@ -88,7 +92,9 @@ def send_booking_confirm_email_with_food(
     _send_raw_email(to_email, subject, body)
 
 
+
 # ---------------- REJECTION EMAILS ---------------- #
+
 
 
 def send_booking_rejected_email(
@@ -115,6 +121,7 @@ def send_booking_rejected_email(
     _send_raw_email(to_email, subject, body)
 
 
+
 def send_food_booking_rejected_email(
     to_email,
     package_name,
@@ -136,6 +143,7 @@ def send_food_booking_rejected_email(
         "EventHub Team"
     )
     _send_raw_email(to_email, subject, body)
+
 
 
 def send_booking_auto_rejected_unavailable_email(
@@ -162,7 +170,9 @@ def send_booking_auto_rejected_unavailable_email(
     _send_raw_email(to_email, subject, body)
 
 
+
 # ---------------- ADMIN NOTIFY EMAIL ---------------- #
+
 
 
 def send_admin_new_booking_email(
