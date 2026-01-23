@@ -196,10 +196,21 @@ def bookings():
             if food_booking:
                 booking['food_plates'] = food_booking.get('plates', 0)
                 booking['food_total'] = food_booking.get('total_price', 0)
+
+                # NEW: attach food package name
+                food_pkg = mongo.db.food_packages.find_one(
+                    {'_id': food_booking.get('package_id')}
+                )
+                booking['food_package_name'] = food_pkg.get('name') if food_pkg else 'N/A'
+            else:
+                booking['food_plates'] = None
+                booking['food_total'] = None
+                booking['food_package_name'] = '-'
         else:
             booking['combined_type'] = 'Hall Only'
             booking['food_plates'] = None
             booking['food_total'] = None
+            booking['food_package_name'] = '-'
 
     return render_template('admin/bookings.html', bookings=bookings_list)
 
@@ -236,6 +247,7 @@ def hall_bookings():
         booking['combined_type'] = 'Hall Only'
         booking['food_plates'] = None
         booking['food_total'] = None
+        booking['food_package_name'] = '-'   # NEW: keep column consistent
 
     return render_template('admin/bookings.html', bookings=bookings_list)
 
@@ -270,6 +282,9 @@ def food_bookings():
         b['_id'] = b['_id']
         b['food_plates'] = b.get('plates', 0)
         b['food_total'] = b.get('total_price', 0)
+
+        # NEW: food package name
+        b['food_package_name'] = pkg.get('name') if pkg else 'N/A'
 
     return render_template('admin/bookings.html', bookings=bookings)
 
@@ -309,9 +324,16 @@ def hall_food_bookings():
         if food_booking:
             booking['food_plates'] = food_booking.get('plates', 0)
             booking['food_total'] = food_booking.get('total_price', 0)
+
+            # NEW: food package name
+            food_pkg = mongo.db.food_packages.find_one(
+                {'_id': food_booking.get('package_id')}
+            )
+            booking['food_package_name'] = food_pkg.get('name') if food_pkg else 'N/A'
         else:
             booking['food_plates'] = None
             booking['food_total'] = None
+            booking['food_package_name'] = '-'
 
     return render_template('admin/bookings.html', bookings=bookings_list)
 
