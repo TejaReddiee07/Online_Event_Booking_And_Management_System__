@@ -61,6 +61,7 @@
                                 <th>Hall Total (₹)</th>
                                 <th>Food Plates</th>
                                 <th>Food Total (₹)</th>
+                                <th>Food Package</th>
                                 <th>Type</th>
                                 <th>Status</th>
                                 <th>Actions</th>
@@ -107,6 +108,15 @@
                                 <td>
                                     {% if booking.combined_type == 'Event' or booking.combined_type == 'Food Only' %}
                                         ₹{{ booking.food_total or 0 }}
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+
+                                {# Food package name #}
+                                <td>
+                                    {% if booking.combined_type == 'Event' or booking.combined_type == 'Food Only' %}
+                                        {{ booking.food_package_name or '-' }}
                                     {% else %}
                                         -
                                     {% endif %}
